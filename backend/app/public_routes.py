@@ -2,7 +2,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from geoalchemy2 import Geography, Geometry
-from sqlalchemy import cast, func
+from sqlalchemy import cast, func, or_
 from sqlalchemy.orm import Session, joinedload
 from . import models, services
 from .database import get_db
@@ -41,13 +41,15 @@ def map_search(bbox:str=Query(description="west,south,east,north"),db:Session=De
 @public.get("/stats")
 def public_stats(db:Session=Depends(get_db)):
     published=db.query(models.Tender).filter_by(status="published").count()
-    awards=db.query(models.Award).filter_by(status="verified").count()
-    total=db.query(func.coalesce(func.sum(models.Award.awarded_value),0)).filter_by(status="verified").scalar()
-    return {"published_tenders":published,"awards_disclosed":awards,"total_awarded_value":float(total),"departments":db.query(models.Department).count()}
+    public_awards=db.query(models.Award).join(models.Tender).filter(or_(models.Award.status=="verified",(models.Award.status=="pending_review") & (models.Tender.extra_data["prototype_data"].as_boolean()==True)))
+    awards=public_awards.count()
+    total=public_awards.with_entities(func.coalesce(func.sum(models.Award.awarded_value),0)).scalar()
+    prototype_count=db.query(models.Tender).filter(models.Tender.extra_data["prototype_data"].as_boolean()==True).count()
+    return {"published_tenders":published,"awards_disclosed":awards,"total_awarded_value":float(total),"departments":db.query(models.Department).count(),"prototype_records":prototype_count}
 @public.get("/activity")
 def public_activity(limit:int=Query(5,ge=1,le=20),db:Session=Depends(get_db)):
     rows=services.visible_tenders(db).options(joinedload(models.Tender.department)).order_by(models.Tender.updated_at.desc()).limit(limit).all()
-    return {"items":[{"tender_ref":t.tender_ref,"title":t.title,"department":t.department.name,"status":t.status,"event":"Award disclosed" if t.status=="awarded" else "Verified and published","created_at":t.updated_at} for t in rows]}
+    return {"items":[{"tender_ref":t.tender_ref,"title":t.title,"department":t.department.name,"status":t.status,"event":"Prototype record imported" if (t.extra_data or {}).get("prototype_data") else ("Award disclosed" if t.status=="awarded" else "Verified and published"),"created_at":t.updated_at} for t in rows]}
 @public.get("/tenders/{ref}")
 def tender_detail(ref:str,db:Session=Depends(get_db)):
     t=services.detail_query(db).filter_by(tender_ref=ref).first()

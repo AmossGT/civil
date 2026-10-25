@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 15 * 1024 * 1024
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
+    load_prototype_data: bool = False
     @property
     def cors_origins(self):
         return [v.strip() for v in self.allowed_origins.split(",") if v.strip()]

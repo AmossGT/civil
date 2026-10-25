@@ -11,9 +11,9 @@ class DepartmentOut(BaseModel):
 class ContractorOut(BaseModel):
     id:int; company_name:str; registration_no:str|None=None; contacts:list[ContactOut]=[]
 class AwardOut(BaseModel):
-    awarded_value:float; aoc_date:date; contractor:ContractorOut
+    awarded_value:float; aoc_date:date|None=None; contractor:ContractorOut
 class TenderOut(BaseModel):
-    tender_ref:str; title:str; description:str|None=None; extra_data:dict=Field(default_factory=dict); status:str; estimated_value:float
+    tender_ref:str; title:str; description:str|None=None; extra_data:dict=Field(default_factory=dict); status:str; estimated_value:float|None=None
     bid_open_date:date|None=None; bid_close_date:date|None=None; location:dict|None=None
     location_label:str|None=None; department:DepartmentOut; award:AwardOut|None=None; work_order_url:str|None=None
 class TenderCreate(BaseModel):

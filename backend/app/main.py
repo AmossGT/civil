@@ -8,6 +8,7 @@ from .admin_routes import admin
 from .config import settings
 from .database import SessionLocal, initialize_database
 from .models import User
+from .prototype_seed import seed_prototype_data
 from .public_routes import public
 from .security import hash_password
 from .workflow_routes import workflow
@@ -15,6 +16,9 @@ from .workflow_routes import workflow
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     initialize_database()
+    if settings.load_prototype_data:
+        with SessionLocal() as db:
+            seed_prototype_data(db)
     if settings.bootstrap_admin_email and settings.bootstrap_admin_password:
         with SessionLocal() as db:
             exists=db.query(User).filter(func.lower(User.email)==settings.bootstrap_admin_email.lower()).first()

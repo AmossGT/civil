@@ -14,6 +14,8 @@ You only need Docker Desktop with its Linux containers engine. No host Python, F
 
 The first API startup enables PostGIS and creates the tables. The bootstrap admin is created if that email is not already registered. Admins can provision officers with `POST /api/v1/users`. Backend and public UI folders are bind-mounted for live reload. PostgreSQL data persists in the `tender_db` Docker volume; uploaded PDFs persist in the local `uploads/` folder.
 
+The supplied prototype dataset is loaded on API startup by default (`LOAD_PROTOTYPE_DATA=true`). It adds records from `backend/app/prototype_data.json` only when each tender reference is absent, so restarts do not duplicate or overwrite them. The website labels these records as provisional and shows that their source notes are unverified. Set `LOAD_PROTOTYPE_DATA=false` in `.env` to disable future imports; already imported records remain in PostgreSQL until removed through a deliberate data cleanup.
+
 Useful commands:
 
 - Stop services: `docker compose down`
