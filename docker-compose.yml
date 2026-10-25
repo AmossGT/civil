@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: tenders
+      POSTGRES_USER: tender
+      POSTGRES_PASSWORD: tender
+    ports: ["5432:5432"]
+    volumes: ["tender_db:/var/lib/postgresql/data"]
+volumes:
+  tender_db:
