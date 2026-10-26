@@ -55,6 +55,19 @@ def tender_detail(ref:str,db:Session=Depends(get_db)):
     t=services.detail_query(db).filter_by(tender_ref=ref).first()
     if not t or t.status not in ("published","awarded"): raise HTTPException(404,"Tender not found")
     return services.public_tender(t,db)
+@public.get("/tenders/{ref}/documents")
+def tender_documents(ref:str,db:Session=Depends(get_db)):
+    t=services.detail_query(db).filter_by(tender_ref=ref).first()
+    if not t or t.status not in ("published","awarded"): raise HTTPException(404,"Tender not found")
+    return [services.public_document(ref,d) for d in t.documents]
+@public.get("/tenders/{ref}/documents/{document_id}")
+def tender_document(ref:str,document_id:int,db:Session=Depends(get_db)):
+    t=services.detail_query(db).filter_by(tender_ref=ref).first()
+    if not t or t.status not in ("published","awarded"): raise HTTPException(404,"Document not found")
+    document=db.query(models.TenderDocument).filter_by(id=document_id,tender_id=t.id).first()
+    path=services.safe_upload_path(document.storage_name) if document else None
+    if not document or not path or not path.is_file(): raise HTTPException(404,"Document not found")
+    return FileResponse(path,media_type=document.content_type,filename=document.source_filename)
 @public.get("/tenders/{ref}/work-order")
 def work_order(ref:str,db:Session=Depends(get_db)):
     t=db.query(models.Tender).filter_by(tender_ref=ref).first()

@@ -20,6 +20,7 @@
       "work_completion_days": 1095,
       "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "AOCP4",
+      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP4 (1).pdf","storage_name":"prototype_documents/2024_ADBPW_2403_4-award-of-contract.pdf"}],
       "map_label": "Package 4 - Highway South Division"
     },
     {
@@ -36,6 +37,7 @@
       "work_completion_days": 1095,
       "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "AOCP3",
+      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP3.pdf","storage_name":"prototype_documents/2024_ADBPW_2403_3-award-of-contract.pdf"}],
       "map_label": "Package 3 - Imphal East Division (ED-2)"
     },
     {
@@ -52,6 +54,7 @@
       "work_completion_days": 1095,
       "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "AOCP2",
+      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP2.pdf","storage_name":"prototype_documents/2024_ADBPW_2403_2-award-of-contract.pdf"}],
       "map_label": "Package 2 - Imphal East Division (ED-1)"
     },
     {
@@ -68,6 +71,7 @@
       "work_completion_days": 1095,
       "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "AOCP1",
+      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP1.pdf","storage_name":"prototype_documents/2024_ADBPW_2403_1-award-of-contract.pdf"}],
       "map_label": "Package 1 - Imphal West Division"
     },
     {
@@ -85,6 +89,7 @@
       "work_completion_days": 853,
       "project_office_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "LOAPackage3",
+      "documents": [{"document_type":"letter_of_acceptance","label":"Letter of Acceptance","source_filename":"LOAPackage3.pdf","storage_name":"prototype_documents/2023_ADBPW_2136_3-letter-of-acceptance.pdf"}],
       "map_label": "Imphal Ring Road Package 3"
     },
     {
@@ -102,6 +107,7 @@
       "work_completion_days": 853,
       "project_office_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "LOAPackage2",
+      "documents": [{"document_type":"letter_of_acceptance","label":"Letter of Acceptance","source_filename":"LOAPackage2.pdf","storage_name":"prototype_documents/2023_ADBPW_2136_2-letter-of-acceptance.pdf"}],
       "map_label": "Imphal Ring Road Package 2"
     },
     {
@@ -119,6 +125,7 @@
       "work_completion_days": 853,
       "project_office_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
       "reference_document_label": "LOAPackage1",
+      "documents": [{"document_type":"letter_of_acceptance","label":"Letter of Acceptance","source_filename":"LOAPackage1.pdf","storage_name":"prototype_documents/2023_ADBPW_2136_1-letter-of-acceptance.pdf"}],
       "map_label": "Imphal Ring Road Package 1"
     }
   ]

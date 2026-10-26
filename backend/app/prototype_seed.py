@@ -2,10 +2,12 @@
 import json
 import logging
 from pathlib import Path
+import shutil
 
 from sqlalchemy.orm import Session
 
 from . import models
+from .config import settings
 
 log = logging.getLogger(__name__)
 DATA_FILE = Path(__file__).with_name("prototype_data.json")
@@ -23,16 +25,16 @@ def seed_prototype_data(db: Session) -> int:
 
     imported = 0
     for record in data["tenders"]:
-        if db.query(models.Tender.id).filter_by(tender_ref=record["tender_ref"]).first():
-            continue
-        contractor = db.query(models.Contractor).filter_by(company_name=record["contractor"]).first()
-        if contractor is None:
-            contractor = models.Contractor(company_name=record["contractor"])
-            db.add(contractor)
-            db.flush()
+        tender = db.query(models.Tender).filter_by(tender_ref=record["tender_ref"]).first()
+        if tender is None:
+            contractor = db.query(models.Contractor).filter_by(company_name=record["contractor"]).first()
+            if contractor is None:
+                contractor = models.Contractor(company_name=record["contractor"])
+                db.add(contractor)
+                db.flush()
 
         extra = {key: value for key, value in record.items() if key not in {
-            "tender_ref", "title", "description", "awarded_value", "contractor"
+            "tender_ref", "title", "description", "awarded_value", "contractor", "documents"
         }}
         extra.update({
             "prototype_data": True,
@@ -42,26 +44,51 @@ def seed_prototype_data(db: Session) -> int:
             "verification_status": "unverified_working_notes",
             "map_coordinates_status": "not_supplied",
         })
-        tender = models.Tender(
-            tender_ref=record["tender_ref"],
-            department_id=department.id,
-            title=record["title"],
-            description=record["description"],
-            extra_data=extra,
-            estimated_value=None,
-            location_label=record["division"],
-            status="published",
-        )
-        db.add(tender)
-        db.flush()
-        db.add(models.Award(
-            tender_id=tender.id,
-            contractor_id=contractor.id,
-            awarded_value=record["awarded_value"],
-            aoc_date=None,
-            status="pending_review",
-        ))
-        imported += 1
+        if tender is None:
+            tender = models.Tender(
+                tender_ref=record["tender_ref"],
+                department_id=department.id,
+                title=record["title"],
+                description=record["description"],
+                extra_data=extra,
+                estimated_value=None,
+                location_label=record["division"],
+                status="published",
+            )
+            db.add(tender)
+            db.flush()
+            db.add(models.Award(
+                tender_id=tender.id,
+                contractor_id=contractor.id,
+                awarded_value=record["awarded_value"],
+                aoc_date=None,
+                status="pending_review",
+            ))
+            imported += 1
+
+        for item in record.get("documents", []):
+            if db.query(models.TenderDocument.id).filter_by(storage_name=item["storage_name"]).first():
+                continue
+            source = DATA_FILE.parent / "seed_documents" / Path(item["source_filename"]).name
+            if not source.is_file():
+                log.warning("Prototype source document is missing: %s", source.name)
+                continue
+            root = settings.upload_dir.resolve()
+            target = (settings.upload_dir / item["storage_name"]).resolve()
+            if not target.is_relative_to(root):
+                raise ValueError("Prototype document path is outside the upload directory")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.exists():
+                shutil.copy2(source, target)
+            db.add(models.TenderDocument(
+                tender_id=tender.id,
+                document_type=item["document_type"],
+                label=item["label"],
+                source_filename=item["source_filename"],
+                storage_name=item["storage_name"],
+                content_type="application/pdf",
+                extra_data={"prototype_data": True, "source": data["source"]},
+            ))
 
     db.commit()
     log.info("Prototype data loader inserted %d tender records", imported)

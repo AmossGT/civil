@@ -73,6 +73,7 @@ class Tender(Base):
     updated_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow,onupdate=utcnow)
     department: Mapped[Department]=relationship(back_populates="tenders")
     award: Mapped['Award|None']=relationship(back_populates="tender",uselist=False,cascade="all, delete-orphan")
+    documents: Mapped[list['TenderDocument']]=relationship(back_populates="tender",cascade="all, delete-orphan")
 
 class Award(Base):
     __tablename__="awards"
@@ -87,6 +88,20 @@ class Award(Base):
     verified_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True))
     tender: Mapped[Tender]=relationship(back_populates="award")
     contractor: Mapped[Contractor]=relationship(back_populates="awards")
+
+class TenderDocument(Base):
+    __tablename__="tender_documents"
+    id: Mapped[int]=mapped_column(primary_key=True)
+    tender_id: Mapped[int]=mapped_column(ForeignKey("tenders.id",ondelete="CASCADE"),index=True)
+    document_type: Mapped[str]=mapped_column(String(50),index=True)
+    label: Mapped[str]=mapped_column(String(200))
+    source_filename: Mapped[str]=mapped_column(String(255))
+    storage_name: Mapped[str]=mapped_column(String(500),unique=True)
+    content_type: Mapped[str]=mapped_column(String(100),default="application/pdf")
+    extra_data: Mapped[dict]=mapped_column(JSON,default=dict)
+    uploaded_by: Mapped[int|None]=mapped_column(ForeignKey("users.id",ondelete="SET NULL"))
+    created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow)
+    tender: Mapped[Tender]=relationship(back_populates="documents")
 
 class AuditLog(Base):
     __tablename__="audit_log"
