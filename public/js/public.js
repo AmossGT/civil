@@ -1,6 +1,6 @@
 // Citizen Portal Controller & Public Dashboard Entry Point
 import { $, api, escapeHtml, money, dateText, timeText, statusName, statusClass } from './api.js';
-import { toast, openModal, closeModal, initConfirmDialog, initGlobalModalListeners } from './ui.js';
+import { toast, initConfirmDialog, initGlobalModalListeners } from './ui.js';
 import { authState, checkAuth, initAuth } from './auth.js';
 import { openTender, initDetailModal } from './detail_modal.js';
 
@@ -8,7 +8,7 @@ const state = {
     items: [],
     total: 0,
     page: 1,
-    pageSize: 20,
+    pageSize: 5,
     departments: [],
     nearby: false
 };
@@ -20,6 +20,21 @@ const packageColors = {
     '2024_ADBPW_2403_3': '#5275ad',
     '2024_ADBPW_2403_4': '#8862aa'
 };
+
+function showPage() {
+    const requested = window.location.hash.slice(1);
+    const page = ['overview', 'tenders', 'map', 'about'].includes(requested) ? requested : 'overview';
+    document.querySelectorAll('.app-page').forEach(section => {
+        section.hidden = section.id !== page;
+    });
+    document.querySelectorAll('.nav a').forEach(link => {
+        const active = link.hash === `#${page}`;
+        link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+    });
+    window.scrollTo(0, 0);
+}
 
 function queryParams(page = state.page) {
     const p = new URLSearchParams({ page: String(page), page_size: String(state.pageSize) });
@@ -50,37 +65,39 @@ export function renderList(items = state.items, total = state.total, allowPages 
         list.innerHTML = items.map(t => {
             const dept = t.department?.name || 'Department';
             const district = t.location_label || t.department?.district || 'Location not provided';
-            const close = dateText(t.bid_close_date);
             return `
                 <article class="tender" data-ref="${escapeHtml(t.tender_ref)}">
                     <div>
                         <span class="ref">${escapeHtml(t.tender_ref)} · ${escapeHtml(dept)}</span>
                         <h3 class="title">${escapeHtml(t.title)}</h3>
                         <div class="rowmeta">
-                            <span>⌖ ${escapeHtml(district)}</span>
-                            <span>◷ Closes ${escapeHtml(close)}</span>
+                            <span>${escapeHtml(district)}</span>
                             <span>▤ ${t.award ? 'Award disclosed' : 'Tender notice'}</span>
                         </div>
                     </div>
-                    <div style="text-align:right">
+                    <div class="tender-card-actions">
                         <span class="badge ${statusClass(t.status)}">${escapeHtml(statusName(t.status))}</span>
-                        <div class="amount" style="margin-top:10px">
-                            ${money(t.extra_data?.prototype_data ? t.award?.awarded_value : t.estimated_value)}
-                            <small>${t.extra_data?.prototype_data ? 'Awarded contract value' : 'Estimated value'}</small>
+                        <div class="amount">
+                            ${t.award?.awarded_value != null ? money(t.award.awarded_value) : t.estimated_value != null ? money(t.estimated_value) : 'Not provided'}
+                            <small>${t.award?.awarded_value != null ? 'Awarded contract value' : 'Estimated value'}</small>
                         </div>
+                        <button class="tender-info" type="button" aria-label="View details for ${escapeHtml(t.tender_ref)}" title="View tender details">ⓘ</button>
                     </div>
                 </article>
             `;
         }).join('');
 
         list.querySelectorAll('.tender').forEach(row => {
-            row.addEventListener('click', () => openTender(row.dataset.ref));
+            row.querySelector('.tender-info').addEventListener('click', event => {
+                event.stopPropagation();
+                openTender(row.dataset.ref, event.currentTarget);
+            });
         });
     }
 
     $('count').textContent = `${total.toLocaleString('en-IN')} records`;
     $('pageSummary').textContent = allowPages
-        ? `Showing ${items.length ? ((state.page - 1) * state.pageSize + 1) : 0}–${Math.min(state.page * state.pageSize, total)} of ${total.toLocaleString('en-IN')} tenders`
+        ? `Showing ${items.length ? ((state.page - 1) * state.pageSize + 1) : 0}–${Math.min(state.page * state.pageSize, total)} of ${total.toLocaleString('en-IN')} records`
         : `${total.toLocaleString('en-IN')} nearby tenders`;
 
     const pages = $('pages');
@@ -89,10 +106,15 @@ export function renderList(items = state.items, total = state.total, allowPages 
         return;
     }
     const max = Math.max(1, Math.ceil(total / state.pageSize));
+    const start = Math.max(1, Math.min(state.page - 2, max - 4));
+    const end = Math.min(max, start + 4);
+    const pageButtons = Array.from({ length: end - start + 1 }, (_, i) => start + i)
+        .map(pageNumber => `<button class="page-number ${pageNumber === state.page ? 'active' : ''}" data-page="${pageNumber}" ${pageNumber === state.page ? 'aria-current="page"' : ''}>${pageNumber}</button>`)
+        .join('');
     pages.innerHTML = `
-        <button data-page="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''}>‹</button>
-        <span>Page ${state.page} of ${max}</span>
-        <button data-page="${state.page + 1}" ${state.page >= max ? 'disabled' : ''}>›</button>
+        <button class="page-arrow" aria-label="Previous page" data-page="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''}>‹</button>
+        ${pageButtons}
+        <button class="page-arrow" aria-label="Next page" data-page="${state.page + 1}" ${state.page >= max ? 'disabled' : ''}>›</button>
     `;
     pages.querySelectorAll('button').forEach(b => {
         b.onclick = () => loadTenders(Number(b.dataset.page));
@@ -254,7 +276,7 @@ export async function findNearby() {
             state.items = data.items;
             state.total = data.total;
             renderList(data.items, data.total, false);
-            $('tenders').scrollIntoView({ behavior: 'smooth' });
+            window.location.hash = '#tenders';
         } catch (e) {
             toast('Nearby search failed: ' + e.message);
         }
@@ -284,14 +306,10 @@ function initDashboardEvents() {
 
     $('mapbtn').onclick = () => {
         loadMap();
-        $('mapbox').scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     $('nearbyBtn').onclick = findNearby;
     $('activityMore').onclick = () => loadActivity(20);
-
-    const closeDetail = $('close');
-    if (closeDetail) closeDetail.onclick = () => closeModal('modal');
 
     window.addEventListener('refresh-public-dashboard', () => {
         loadTenders(state.page);
@@ -309,6 +327,8 @@ function initDashboardEvents() {
 
 // Global bootstrap
 document.addEventListener('DOMContentLoaded', async () => {
+    showPage();
+    window.addEventListener('hashchange', showPage);
     initGlobalModalListeners();
     initConfirmDialog();
     initAuth();

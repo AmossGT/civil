@@ -3,29 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f4f5f1">
+<meta name="theme-color" content="#f4f7fb">
 <title>OpenTender — Public Procurement Transparency Portal</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --paper: #f4f5f1;
+  --paper: #f4f7fb;
   --white: #ffffff;
-  --ink: #17251f;
-  --muted: #758078;
-  --line: #e4e8e2;
-  --line-dark: #cfd6cd;
-  --green: #1e664a;
-  --green-hover: #164f39;
-  --green2: #dfeee5;
-  --lime: #d5f26b;
-  --orange: #f3a35c;
-  --navy: #233e34;
+  --ink: #172b45;
+  --muted: #687b91;
+  --line: #dce5ef;
+  --line-dark: #c5d2e0;
+  --green: #1e5a9b;
+  --green-hover: #174779;
+  --green2: #e8f1fb;
+  --lime: #bdd6f1;
+  --orange: #df9746;
+  --navy: #183b63;
   --danger: #cf3d33;
   --danger-hover: #a82e25;
   --danger-bg: #fdf2f2;
-  --shadow: 0 16px 48px #20352b0c;
-  --shadow-lg: 0 24px 64px #1221191c;
+  --shadow: 0 8px 24px #183b630d;
+  --shadow-lg: 0 20px 56px #102b481f;
 }
 
 * { box-sizing: border-box; }
@@ -79,6 +79,14 @@ button { cursor: pointer; }
 .nav { display: flex; align-items: center; gap: 28px; }
 .nav a { color: #69766f; text-decoration: none; font-size: 13px; font-weight: 500; }
 .nav a.active { color: var(--ink); font-weight: 700; }
+.app-page[hidden] { display:none !important; }
+.overview-summary { display:grid; grid-template-columns:minmax(0, 1.4fr) minmax(260px, 0.8fr); gap:15px; margin:0 0 24px; align-items:stretch; }
+.overview-summary .amount-card { min-height:100%; }
+.map-page { max-width:1000px; margin:24px auto; }
+.about-page { max-width:820px; margin:24px auto; padding:26px; }
+.about-page h2 { font:700 22px Manrope,sans-serif; margin-bottom:10px; }
+.about-page p { color:#637168; line-height:1.7; margin-bottom:10px; }
+.tenders-workspace { grid-template-columns:minmax(0,1fr); margin:24px 0; }
 .navright { display: flex; gap: 12px; align-items: center; }
 
 .iconbtn, .login {
@@ -230,10 +238,15 @@ h1, h2, h3, h4, p { margin-top: 0; }
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 12px;
-  cursor: pointer;
   transition: 0.15s;
 }
-.tender:hover { background: #fbfcfa; }
+.tender-card-actions { display:flex; align-items:center; gap:9px; text-align:right; }
+.tender-card-actions .amount { margin:0; }
+.tender-info {
+  flex:0 0 auto; width:32px; height:32px; padding:0; border:1px solid var(--line-dark);
+  border-radius:50%; background:#fff; color:var(--green); font-size:18px; font-weight:700; cursor:pointer;
+}
+.tender-info:hover, .tender-info:focus-visible { border-color:var(--green); background:var(--green2); outline:2px solid #1e664a33; }
 .ref { font: 10px 'DM Mono', monospace; color: #7f8983; letter-spacing: 0.3px; }
 .title { font: 700 15px Manrope, sans-serif; margin: 6px 0 8px; letter-spacing: -0.25px; }
 .rowmeta { display: flex; gap: 15px; align-items: center; color: #829087; font-size: 11px; }
@@ -361,6 +374,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   display: none;
   justify-content: flex-end;
 }
+.modalback#modal { justify-content:center; align-items:center; padding:20px; }
 .modalback.open { display: flex; }
 .detail {
   width: min(540px, 100%);
@@ -370,6 +384,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   overflow: auto;
   box-shadow: -20px 0 50px #14231d22;
 }
+.detail[role="dialog"] { width:min(640px, 100%); height:auto; max-height:min(88vh, 900px); overflow-y:auto; overscroll-behavior:contain; border-radius:14px; }
 .detailtop { display: flex; justify-content: space-between; align-items: center; }
 .detailtop .ref { font-size: 11px; }
 .close {
@@ -393,6 +408,18 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .contact { display: flex; justify-content: space-between; border-top: 1px solid #eff1ed; padding: 10px 0 0; margin-top: 10px; font-size: 11px; }
 .contact span { color: #7a857e; }
 .pdf { display: flex; align-items: center; justify-content: space-between; color: var(--green); text-decoration: none; font-weight: 700; font-size: 12px; }
+.document-entry { display:grid; gap:0; }
+.kmz-hint {
+  display:flex;
+  align-items:flex-start;
+  gap:5px;
+  margin:4px 0 0 21px;
+  color:#71839a;
+  font-size:10px;
+  font-style:italic;
+  line-height:1.45;
+}
+.kmz-hint-icon { color:#6485a7; font-size:11px; line-height:1.35; flex:none; }
 
 /* Toast */
 .toast {
@@ -728,16 +755,183 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .side { grid-template-columns: 1fr 1fr; }
   .amount-card { grid-column: span 2; }
   .viewer-metrics-grid { grid-template-columns: 1fr 1fr; }
+  .overview-summary { grid-template-columns:1fr 1fr; }
 }
 @media(max-width: 640px) {
   .shell { padding: 0 14px; }
-  .topbar { height: 65px; }
-  .nav { display: none; }
+  .topbar { height:auto; min-height:65px; flex-wrap:wrap; padding:10px 0; gap:8px; }
+  .nav { display:flex; order:3; width:100%; justify-content:space-between; gap:8px; }
+  .nav a { font-size:12px; }
+  .navright { gap:6px; }
+  .live { display:none; }
   .hero h1 { font-size: 38px; }
   .stats { grid-template-columns: 1fr 1fr; }
   .side { grid-template-columns: 1fr; }
   .amount-card { grid-column: auto; }
   .form-grid { grid-template-columns: 1fr; }
+  .tender { align-items:flex-start; }
+  .tender-card-actions { flex-direction:column; align-items:flex-end; gap:6px; }
+  .modalback#modal { padding:12px; }
+  .detail[role="dialog"] { max-height:94vh; padding:20px; }
+  .overview-summary { grid-template-columns:1fr; }
+  .about-page { padding:20px; }
+}
+
+/* Blue-and-white public procurement dashboard styling */
+.topbar {
+  height:74px;
+  margin:0 -38px;
+  padding:0 38px;
+  background:#fff;
+  border-bottom-color:#dce5ef;
+}
+.brandmark { width:36px; height:36px; background:transparent; color:#2474cc; border-radius:0; }
+.brandmark svg { width:34px; height:34px; }
+.brand-name { color:#132b4a; font:800 20px Manrope,sans-serif; letter-spacing:-.7px; }
+.brand-name span { color:#1768bd; }
+.brand small { color:#71839a; }
+.nav { gap:8px; }
+.nav a {
+  height:100%;
+  padding:0 12px;
+  border-bottom:3px solid transparent;
+  border-radius:0;
+  display:flex;
+  align-items:center;
+  color:#52677f;
+  transition:background .15s ease,color .15s ease;
+}
+.nav a:hover { background:transparent; color:#194f88; }
+.nav a.active { background:transparent; border-bottom-color:#216bc2; color:#1762b3; }
+.navright .live { color:#536d88; }
+.hero { padding:39px 0 24px; }
+.hero h1 { font-size:clamp(36px,4.4vw,52px); letter-spacing:-1.8px; color:#172f4d; }
+.hero h1 em { color:#1e5a9b; }
+.hero-meta {
+  padding:11px 15px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:10px;
+  line-height:1.65;
+}
+.hero-meta b { color:#194f88; }
+.eyebrow { color:#1e5a9b; }
+.eyebrow:before { background:#1e5a9b; }
+.stats {
+  gap:13px;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.stat {
+  min-width:0;
+  padding:17px 19px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:11px;
+  box-shadow:var(--shadow);
+}
+.stat:last-child { border:1px solid var(--line); }
+.stat span { color:#62758b; }
+.stat strong { color:#173b63; }
+.statmark { background:#edf4fc; color:#1e5a9b; }
+.panel { border-color:#dce5ef; border-radius:11px; box-shadow:var(--shadow); }
+.tenders-workspace > .panel { background:transparent; border:0; box-shadow:none; }
+.toolbar {
+  padding:13px 14px;
+  border:1px solid #dce6f1;
+  border-radius:10px;
+  background:#f7faff;
+  margin-bottom:24px;
+}
+.filter-label { display:none; }
+.filters { justify-content:space-between; }
+.filters #dept { margin-right:auto; min-width:min(270px,35%); }
+.searchbox input { background:#fbfdff; border-color:#d4dfeb; }
+.searchbox input:focus, select:focus, textarea:focus {
+  border-color:#7fa7d1;
+  box-shadow:0 0 0 3px #e7f0fa;
+}
+.filter, .filters select { border-color:#d4dfeb; color:#435a74; }
+.filterbtn { background:#f7faff; border-color:#d4dfeb; color:#355675; }
+.filterbtn:hover { background:#edf4fc; border-color:#b9cde2; }
+.resultshead { padding:0 2px 12px; }
+.resultshead strong { color:#1c3b5d; }
+#list { padding:0; }
+.tender {
+  margin:10px 0;
+  padding:17px 18px;
+  border:1px solid #dce5ef;
+  border-radius:10px;
+  background:#fff;
+}
+.ref { color:#657a91; }
+.title { color:#1a3858; font-size:14px; line-height:1.45; }
+.rowmeta { color:#687d93; }
+.badge.published {
+  color:#147b52;
+  background:#e0f8ed;
+  border:1px solid #c9f0dc;
+}
+.badge.awarded { color:#286548; background:#eaf5ee; border:1px solid #d7eadd; }
+.amount { color:#173d68; font-size:16px; }
+.amount small { color:#6b7f94; }
+.tender-info {
+  width:34px;
+  height:34px;
+  border-color:#c6d8eb;
+  background:#edf5fd;
+  color:#1c5b9d;
+  transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease;
+}
+.tender-info:hover, .tender-info:focus-visible {
+  border-color:#1e5a9b;
+  background:#1e5a9b;
+  color:#fff;
+  outline:3px solid #d9e9f9;
+}
+.tender-info:hover { transform:translateY(-1px); }
+.tablefoot { border-color:#e5ebf2; color:#647a91; }
+.pages { gap:7px; }
+.pages button {
+  width:34px;
+  height:34px;
+  border-color:#d2deea;
+  border-radius:8px;
+  color:#245b91;
+  background:#fff;
+  transition:background .15s ease,border-color .15s ease;
+}
+.pages button:not(:disabled):hover { background:#edf4fc; border-color:#a9c2dc; }
+.pages button:focus-visible { outline:3px solid #d9e9f9; border-color:#1e5a9b; }
+.pages span { color:#62758b; }
+.pages .page-number { color:#355a7e; }
+.pages .page-number.active { color:#fff; background:#2783df; border-color:#2783df; box-shadow:0 2px 6px #1670ca33; }
+.sidehead { border-color:#e8edf4; }
+.close { border-color:#d6e0eb; color:#274b70; }
+.close:hover { background:#edf4fc; border-color:#b9cde2; }
+.workspace.tenders-workspace { grid-template-columns:minmax(0,1fr); }
+@media(max-width:900px) {
+  .topbar { margin:0 -20px; padding:0 20px; }
+}
+@media(max-width:640px) {
+  .topbar { height:auto; min-height:65px; margin:0 -14px; padding:10px 14px; }
+  .nav a { height:auto; padding:8px 7px; border-bottom-width:2px; }
+  .hero { padding:30px 0 20px; }
+  .hero-meta { justify-self:start; text-align:left; }
+  .stat { padding:14px; }
+  .tender { margin:7px 0; padding:14px; }
+  #list { padding:0; }
+  .toolbar { padding:14px; }
+  .toolrow { flex-wrap:wrap; }
+  .toolrow .searchbox { flex:1 1 100%; }
+  .toolrow .filter { flex:1 1 auto; }
+  .filters { flex-wrap:wrap; }
+  .filters #dept { flex:1 1 100%; width:100%; min-width:0; }
+  .filters #status, .filters #range { flex:1 1 calc(50% - 6px); min-width:0; }
+  .tablefoot { padding:12px 14px; }
+  .tablefoot { flex-wrap:wrap; gap:10px; }
 }
 </style>
 </head>
@@ -746,20 +940,20 @@ h1, h2, h3, h4, p { margin-top: 0; }
 <div class="shell">
   <!-- Top Navigation Header -->
   <header class="topbar">
-    <a href="#" class="brand">
-      <div class="brandmark">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19h16M5 19V9l7-5 7 5v10M9 19v-6h6v6M3 9l9-6 9 6"/>
+    <a href="#overview" class="brand">
+      <div class="brandmark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="currentColor">
+          <path d="m17.5 3 8 8-3.1 3.1-8-8L17.5 3Zm-4.8 4.8 8 8-3.1 3.1-8-8 3.1-3.1Zm.8 10.4 5.2 5.2-8.3 8.3-5.2-5.2 8.3-8.3ZM3 29h26v-2H3v2Z"/>
         </svg>
       </div>
       <div>
-        OpenTender
+        <span class="brand-name">Open<span>Tender</span></span>
         <small>PUBLIC PROCUREMENT, IN THE OPEN</small>
       </div>
     </a>
     
     <nav class="nav">
-      <a class="active" href="#">Overview</a>
+      <a class="active" href="#overview">Overview</a>
       <a href="#tenders">Tenders</a>
       <a href="#map">Map view</a>
       <a href="#about">About</a>
@@ -774,6 +968,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 
   <main>
     <!-- Hero Header -->
+    <section class="app-page" id="overview">
     <section class="hero">
       <div>
         <div class="eyebrow">TRANSPARENCY PORTAL · MANIPUR</div>
@@ -824,8 +1019,32 @@ h1, h2, h3, h4, p { margin-top: 0; }
       </div>
     </section>
 
+    <section class="overview-summary">
+      <div class="panel">
+        <div class="sidehead">
+          <h3>Latest activity</h3>
+          <button id="activityMore">View all →</button>
+        </div>
+        <div class="activity" id="activityList">
+          <div class="empty">Loading activity…</div>
+        </div>
+      </div>
+      <div class="amount-card">
+        <div class="eyebrow">DISCLOSED AWARDS</div>
+        <h3 id="cardAwardValue">—</h3>
+        <p>contract award values in the public record</p>
+        <div class="progress"><i id="awardProgress"></i></div>
+        <div class="progressmeta">
+          <span id="awardCount">Loading</span>
+          <span>including provisional</span>
+        </div>
+      </div>
+    </section>
+    </section>
+
     <!-- Main Workspace Section -->
-    <section class="workspace" id="tenders">
+    <section class="app-page" id="tenders" hidden>
+    <section class="workspace tenders-workspace">
       <div class="panel">
         <div class="toolbar">
           <div class="toolrow">
@@ -872,9 +1091,11 @@ h1, h2, h3, h4, p { margin-top: 0; }
         </div>
       </div>
 
-      <!-- Right Aside (Map, Activity, Award Summary) -->
-      <aside class="side">
-        <div class="panel" id="map">
+    </section>
+    </section>
+
+    <section class="app-page" id="map" hidden>
+      <div class="panel map-page">
           <div class="sidehead">
             <h3>Project road routes</h3>
             <button id="mapbtn">Explore map ↗</button>
@@ -890,29 +1111,13 @@ h1, h2, h3, h4, p { margin-top: 0; }
             </div>
             <button class="mapnear" id="nearbyBtn">⌖ &nbsp;Find near me</button>
           </div>
-        </div>
+      </div>
+    </section>
 
-        <div class="panel">
-          <div class="sidehead">
-            <h3>Latest activity</h3>
-            <button id="activityMore">View all →</button>
-          </div>
-          <div class="activity" id="activityList">
-            <div class="empty">Loading activity…</div>
-          </div>
-        </div>
-
-        <div class="amount-card">
-          <div class="eyebrow">DISCLOSED AWARDS</div>
-          <h3 id="cardAwardValue">—</h3>
-          <p>contract award values in the public record</p>
-          <div class="progress"><i id="awardProgress"></i></div>
-          <div class="progressmeta">
-            <span id="awardCount">Loading</span>
-            <span>including provisional</span>
-          </div>
-        </div>
-      </aside>
+    <section class="app-page panel about-page" id="about" hidden>
+      <h2>About OpenTender</h2>
+      <p>OpenTender presents public procurement records, tender notices, disclosed awards, and project location information in one place.</p>
+      <p>Record completeness and verification depend on the information supplied by participating departments. Prototype records are transcribed from supplied working notes and have not been independently verified against original tender documents. Award values are contract values, not payments disbursed.</p>
     </section>
   </main>
 
@@ -926,10 +1131,10 @@ h1, h2, h3, h4, p { margin-top: 0; }
 <!-- MODAL: Public Tender Inspection Detail -->
 <!-- ======================================================== -->
 <div class="modalback" id="modal">
-  <section class="detail">
+  <section class="detail" role="dialog" aria-modal="true" aria-labelledby="dtitle" aria-describedby="ddesc" tabindex="-1">
     <div class="detailtop">
       <span class="ref" id="dref"></span>
-      <button class="close" id="close">×</button>
+      <button class="close" id="close" type="button" aria-label="Close tender details">×</button>
     </div>
     <div style="margin-top:16px" id="dbadge"></div>
     <h2 id="dtitle"></h2>
