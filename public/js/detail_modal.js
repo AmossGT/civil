@@ -63,7 +63,7 @@ export async function openTender(ref, opener = document.activeElement) {
 
         const emails = [...(extra.contractor_emails || []), ...(extra.contractor_email ? [extra.contractor_email] : [])];
         $('dcontract').innerHTML = contractor ? `
-            <h4>${t.award.provisional ? 'Provisional award' : 'Awarded contractor'}</h4>
+            <h4>Contractor Information</h4>
             <b>${escapeHtml(contractor.company_name)}</b>
             <p class="detaildesc" style="margin:5px 0 0">${t.award.provisional ? 'Working-note award · awaiting review' : (t.award.aoc_date ? dateText(t.award.aoc_date) : 'Award disclosed')}</p>
             ${emails.map(email => `<div class="contact"><span>Public corporate email</span><b>${escapeHtml(email)}</b></div>`).join('')}
