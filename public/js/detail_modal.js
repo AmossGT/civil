@@ -94,19 +94,22 @@ export async function openTender(ref, opener = document.activeElement) {
         const recordDocs = $('recordDocuments');
         if (recordDocs) {
             recordDocs.innerHTML = documents.length ? documents.map(d => {
-                const documentLabel = String(d.label || '').replace(/Award of Contract/gi, 'Work Order');
+                const isMapLayoutFile = /^loapackage[1-3]\.pdf$/i.test(String(d.filename || ''));
+                const documentLabel = isMapLayoutFile ? 'Work order' : String(d.label || '').replace(/Award of Contract/gi, 'Work Order');
+                const documentDisplay = isMapLayoutFile
+                    ? `• Work order: ${escapeHtml(d.filename)}`
+                    : `▧ &nbsp; ${escapeHtml(documentLabel)}<small style="display:block;color:#8c9790;font-weight:400;margin:4px 0 0 21px">${escapeHtml(d.filename)}</small>`;
                 const isKmz = /\.kmz(?:$|[?#])/i.test(String(d.filename || '')) ||
                     /\.kmz(?:$|[?#])/i.test(String(d.download_url || '')) ||
                     /application\/vnd\.google-earth\.kmz/i.test(String(d.content_type || ''));
                 return `
                     <div class="document-entry">
                         <a class="pdf" href="${escapeHtml(d.download_url)}" target="_blank" rel="noopener">
-                            <span>▧ &nbsp; ${escapeHtml(documentLabel)}
-                                <small style="display:block;color:#8c9790;font-weight:400;margin:4px 0 0 21px">${escapeHtml(d.filename)}</small>
-                            </span>
+                            <span>${documentDisplay}</span>
                             <b>↓</b>
                         </a>
                         ${isKmz ? '<div class="kmz-hint"><span class="kmz-hint-icon" aria-hidden="true">ⓘ</span><span>Hint: To view this file, install Google Earth for mobile and Google Earth Pro for laptop.</span></div>' : ''}
+                        ${isMapLayoutFile ? '<div style="display:grid;gap:3px;margin:5px 0 0 21px;color:#71839a"><strong style="font-size:11px;font-weight:600">• Map layout: Pdf</strong><small style="margin-left:14px;font-size:10px;font-style:italic;line-height:1.45">ⓘ Hint: The map layout is in the 6th page in the pdf provided above.</small></div>' : ''}
                     </div>
                 `;
             }).join('') : '<p class="detaildesc" style="margin:8px 0 0">No tender documents attached.</p>';
