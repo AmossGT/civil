@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17251f">
+<title>OpenTender — Admin Console (v1)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --paper: #f4f5f1;
+  --white: #ffffff;
+  --ink: #17251f;
+  --muted: #758078;
+  --line: #e4e8e2;
+  --line-dark: #cfd6cd;
+  --green: #1e664a;
+  --green-hover: #164f39;
+  --purple: #542b8c;
+  --purple-bg: #efe8f8;
+  --navy: #233e34;
+  --danger: #cf3d33;
+  --danger-hover: #a82e25;
+  --danger-bg: #fdf2f2;
+  --shadow: 0 16px 48px #20352b0c;
+  --shadow-lg: 0 24px 64px #1221191c;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+.shell { max-width: 1440px; margin: auto; padding: 0 38px; }
+
+/* Top Bar */
+.topbar {
+  height: 72px;
+  border-bottom: 1px solid var(--line);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 38px;
+}
+.brand {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  font-family: Manrope, sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.7px;
+  text-decoration: none;
+  color: inherit;
+}
+.brandmark {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--purple);
+  display: grid;
+  place-items: center;
+  color: white;
+}
+.brandmark svg { width: 19px; }
+.brand small {
+  display: block;
+  color: var(--purple);
+  font: 10px 'DM Mono', monospace;
+  letter-spacing: 0.7px;
+  margin-top: 1px;
+}
+
+.topright { display: flex; gap: 14px; align-items: center; }
+.link-public {
+  color: var(--green);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: white;
+}
+.link-public:hover { background: #fafbf9; }
+
+.user-meta { display: flex; align-items: center; gap: 8px; }
+.user-email { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.iconbtn, .login {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.iconbtn:hover { background: #fafbf9; }
+.submitlogin {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+  width: 100%;
+  height: 40px;
+}
+.submitlogin:hover { background: var(--green-hover); }
+
+/* Main Container */
+.admin-container {
+  max-width: 1440px;
+  margin: 30px auto;
+  padding: 0 38px;
+}
+.admin-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+}
+
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+}
+.eyebrow {
+  font: 11px 'DM Mono', monospace;
+  letter-spacing: 1.2px;
+  color: var(--purple);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.eyebrow:before { content: ''; width: 19px; height: 1px; background: var(--purple); }
+
+/* Tab Navigation */
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+}
+.admin-tab-btn {
+  padding: 12px 20px;
+  border: 0;
+  background: none;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.admin-tab-btn:hover { color: var(--ink); }
+.admin-tab-btn.active {
+  color: var(--purple);
+  border-bottom-color: var(--purple);
+}
+
+.admin-pane-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.admin-filters-inline { display: flex; gap: 10px; align-items: center; }
+
+/* Data Tables */
+.admintable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.admintable th {
+  background: #f7f9f6;
+  text-align: left;
+  padding: 11px 16px;
+  font-size: 11px;
+  color: #6a7770;
+  border-bottom: 1px solid var(--line);
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+}
+.admintable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eff1ed;
+  font-size: 12px;
+  vertical-align: middle;
+}
+.admintable tr:last-child td { border-bottom: 0; }
+.admintable tr:hover td { background: #fafbf9; }
+.ref-code { font: 10px 'DM Mono', monospace; color: #87948c; display: block; }
+.tender-table-title { font-size: 13px; font-weight: 700; color: var(--ink); display: block; margin: 3px 0 2px; }
+.table-submeta { color: #8c9790; font-size: 10px; display: block; }
+.action-cell { white-space: nowrap; text-align: right; }
+
+.tbl-btn {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4f5d54;
+  margin-left: 4px;
+}
+.tbl-btn:hover { background: #f3f6f3; }
+.btn-edit { color: #2563eb; }
+.btn-award { color: var(--green); }
+.btn-doc { color: #7c3aed; }
+.btn-delete { color: var(--danger); }
+.btn-delete:hover { background: var(--danger-bg); border-color: #f8c8c6; }
+.btn-verify { background: var(--green); color: white; border-color: var(--green); }
+.btn-verify:hover { background: var(--green-hover); }
+.btn-return { background: white; color: #b45309; border-color: #fde68a; }
+.btn-deactivate { color: var(--danger); }
+.btn-activate { color: var(--green); }
+
+.admin-table-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  color: #8a958d;
+  font-size: 11px;
+}
+.pages { display: flex; gap: 6px; align-items: center; }
+.pages button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 6px;
+  color: #7a857d;
+  display: grid;
+  place-items: center;
+}
+.pages button:disabled { opacity: 0.35; cursor: default; }
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 20px;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.badge.awarded { background: #e5f3e8; color: #286740; }
+.badge.published { background: #edf1f6; color: #566a87; }
+.badge.review { background: #fff1e1; color: #9b652e; }
+.badge.draft { background: #f3f3f3; color: #636b66; border: 1px dashed #d0d6d2; }
+.badge.cancelled { background: #fbe9e8; color: #a3524c; }
+.badge-admin { background: var(--purple-bg); color: var(--purple); }
+.badge-viewer { background: #e0f2ea; color: #156d49; }
+.badge-audit-create { background: #e5f3e8; color: #286740; }
+.badge-audit-update { background: #edf1f6; color: #365076; }
+.badge-audit-delete { background: #fbe9e8; color: #a3524c; }
+.badge-audit-verify { background: #e0f2ea; color: #1b6845; }
+
+/* Status */
+.status-active { color: #166534; background: #dcfce7; padding: 2px 7px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+.status-inactive { color: #991b1b; background: #fee2e2; padding: 2px 7px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+
+/* Forms */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-full { grid-column: 1 / -1; }
+.formgroup { display: flex; flex-direction: column; gap: 5px; }
+.formgroup label { font-size: 11px; font-weight: 600; color: #55635a; }
+.formgroup input, .formgroup select, .formgroup textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: white;
+  outline: 0;
+}
+.formgroup textarea { resize: vertical; min-height: 70px; }
+.formgroup input.has-error, .formgroup select.has-error {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+}
+.field-error-msg { color: var(--danger); font-size: 10px; margin-top: 3px; }
+.formerror { color: var(--danger); font-size: 12px; min-height: 16px; margin: 6px 0; }
+
+/* Modals */
+.modalback {
+  position: fixed;
+  inset: 0;
+  background: #14231dcc;
+  z-index: 100;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modalback.open { display: flex; }
+.submodal-panel {
+  width: min(600px, 100%);
+  border-radius: 14px;
+  padding: 26px;
+  background: white;
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.detailtop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.close {
+  border: 1px solid var(--line);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: white;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+}
+.close:hover { background: #f5f6f3; }
+.detaildesc { font-size: 12px; line-height: 1.6; color: #6f7b73; }
+
+/* CSV Dropzone & Errors */
+.dropzone {
+  border: 2px dashed #cfd9d2;
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  background: white;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.dropzone:hover { border-color: var(--purple); background: #faf9fd; }
+.csv-table-wrap {
+  max-height: 240px;
+  overflow: auto;
+  margin-top: 12px;
+  border: 1px solid #f2c7c5;
+  border-radius: 8px;
+}
+.csv-error-table { width: 100%; border-collapse: collapse; background: white; font-size: 11px; }
+.csv-error-table th { background: #fdf2f2; color: var(--danger); padding: 8px 12px; text-align: left; font-family: 'DM Mono', monospace; }
+.csv-error-table td { padding: 8px 12px; border-bottom: 1px solid #fae2e1; }
+.csv-err-msg { color: var(--danger); font-family: 'DM Mono', monospace; font-size: 11px; }
+.alert-box { padding: 14px 18px; border-radius: 9px; font-size: 12px; margin-top: 14px; }
+.alert-error { background: var(--danger-bg); border: 1px solid #f8c8c6; color: #991b1b; }
+.alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+/* Confirm Dialog */
+.confirm-box {
+  width: min(440px, 100%);
+  background: white;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: var(--shadow-lg);
+}
+.confirm-box h3 { font: 700 18px Manrope, sans-serif; margin-bottom: 10px; }
+.confirm-box p { font-size: 13px; color: #57655d; line-height: 1.6; margin-bottom: 20px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
+.btn-danger:hover { background: var(--danger-hover); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #18392c;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 20px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  z-index: 999;
+  font-size: 12px;
+}
+.toast.show { display: block; }
+.empty { padding: 36px; text-align: center; color: #77827c; }
+
+/* Staff Row */
+.staffrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  background: #f7f9f6;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.staffrow small { display: block; color: #829087; margin-top: 4px; }
+.staffactions { display: flex; gap: 8px; }
+
+/* Spinners */
+.spinner-sm {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brandmark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 19h16M5 19V9l7-5 7 5v10M9 19v-6h6v6M3 9l9-6 9 6"/>
+      </svg>
+    </div>
+    <div>
+      OpenTender
+      <small>ADMINISTRATOR CONSOLE (v1)</small>
+    </div>
+  </div>
+
+  <div class="topright">
+    <a href="/" class="link-public">View Public Portal ↗</a>
+    <div class="user-meta">
+      <span class="badge badge-admin">Administrator</span>
+      <span class="user-email" id="adminUserEmail">Loading...</span>
+    </div>
+    <button class="iconbtn" id="adminLogoutBtn" title="Sign out">Log out ✕</button>
+  </div>
+</header>
+
+<main class="admin-container">
+  <div class="admin-card">
+    <div class="admin-header-row">
+      <div>
+        <div class="eyebrow">PRIVILEGED WORKSPACE</div>
+        <h2 style="font:800 24px Manrope;margin:4px 0 0">Administrator Control Panel</h2>
+      </div>
+      <span style="font-size:12px;color:var(--muted)">Endpoint: <code>/admin/v1/</code></span>
+    </div>
+
+    <!-- 5 Tab Bar -->
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" data-tab="tenders">Tenders & Direct CRUD</button>
+      <button class="admin-tab-btn" data-tab="review">Review Queue</button>
+      <button class="admin-tab-btn" data-tab="import">Batch CSV Import</button>
+      <button class="admin-tab-btn" data-tab="users">User Provisioning</button>
+      <button class="admin-tab-btn" data-tab="audit">System Audit Logs</button>
+    </div>
+
+    <!-- Tab 1: Tenders Direct CRUD -->
+    <div class="admin-tab-pane" id="adminPane-tenders">
+      <div class="admin-pane-actions">
+        <div class="admin-filters-inline">
+          <input type="text" id="adminTenderSearch" placeholder="Search reference or title..." style="height:36px;padding:0 10px;border:1px solid var(--line);border-radius:6px;width:240px">
+          <select id="adminTenderStatusFilter" style="height:36px;padding:0 10px;border:1px solid var(--line);border-radius:6px">
+            <option value="">All statuses</option>
+            <option value="draft">Drafts</option>
+            <option value="published">Published</option>
+            <option value="awarded">Awarded</option>
+            <option value="pending_review">Pending Review</option>
+          </select>
+        </div>
+        <button class="login submitlogin" id="newTenderBtn" style="width:auto;height:36px;padding:0 16px">+ New Tender</button>
+      </div>
+      <div id="adminTendersList">
+        <div class="empty">Loading admin tenders…</div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Review Queue -->
+    <div class="admin-tab-pane" id="adminPane-review" style="display:none">
+      <p class="detaildesc" style="margin-bottom:14px">
+        Review unverified working notes, draft submissions, and contractor awards awaiting public disclosure.
+      </p>
+      <div id="reviewQueueContent">
+        <div class="empty">Loading pending reviews…</div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Batch CSV Import -->
+    <div class="admin-tab-pane" id="adminPane-import" style="display:none">
+      <p class="detaildesc" style="margin-bottom:14px">
+        Two-pass atomic tender import. If any single row fails schema, reference, or coordinate validation, the entire batch is rejected with line numbers and reasons.
+      </p>
+      <form id="csvImportForm">
+        <div class="dropzone" onclick="document.getElementById('csvFileInput').click()">
+          <input type="file" id="csvFileInput" accept=".csv" style="display:none">
+          <span style="font-size:28px">📄</span>
+          <p style="margin:8px 0 4px;font-weight:600">Select or drop a CSV tender file here</p>
+          <small style="color:var(--muted)">Expected columns: <code>tender_ref, department_id, title, estimated_value, bid_open_date, bid_close_date, latitude, longitude, location_label</code></small>
+        </div>
+        <button type="submit" id="csvSubmitBtn" class="login submitlogin" style="margin-top:14px;width:auto;padding:0 24px">Validate & Import Atomically</button>
+      </form>
+      <div id="csvImportResults" style="display:none"></div>
+    </div>
+
+    <!-- Tab 4: User Provisioning -->
+    <div class="admin-tab-pane" id="adminPane-users" style="display:none">
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start">
+        <div style="background:#fafbf9;padding:20px;border-radius:10px;border:1px solid var(--line)">
+          <h4 style="margin:0 0 12px;font:700 14px Manrope">Provision Staff User</h4>
+          <form id="newUserForm">
+            <div class="formgroup" style="margin-bottom:10px">
+              <label>Email Address</label>
+              <input type="email" id="newUserEmail" name="email" required placeholder="user@department.gov.in">
+            </div>
+            <div class="formgroup" style="margin-bottom:10px">
+              <label>Temporary Password</label>
+              <input type="password" id="newUserPassword" name="password" required placeholder="••••••••">
+            </div>
+            <div class="formgroup" style="margin-bottom:10px">
+              <label>Role</label>
+              <select id="newUserRole" name="role">
+                <option value="department_viewer">Department Viewer</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div class="formgroup" id="newUserDeptGroup" style="margin-bottom:14px">
+              <label>Assigned Department</label>
+              <select id="newUserDeptSelect" name="department_id"></select>
+            </div>
+            <p class="formerror" id="newUserError"></p>
+            <button type="submit" class="login submitlogin" style="width:100%">Create User Account</button>
+          </form>
+        </div>
+        <div>
+          <h4 style="margin:0 0 12px;font:700 14px Manrope">Active Portal Accounts</h4>
+          <div id="adminUsersList">
+            <div class="empty">Loading users…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: System Audit Logs -->
+    <div class="admin-tab-pane" id="adminPane-audit" style="display:none">
+      <p class="detaildesc" style="margin-bottom:14px">
+        Immutable cryptographic audit trail recording every state change, document upload, award disclosure, and administrative action.
+      </p>
+      <div id="adminAuditList">
+        <div class="empty">Loading system audit records…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: Add / Edit Tender Dialog -->
+<div class="modalback" id="tenderFormModal">
+  <section class="submodal-panel">
+    <div class="detailtop">
+      <span class="eyebrow" id="tenderFormModeLabel">TENDER RECORD</span>
+      <button class="close" id="tenderFormClose">×</button>
+    </div>
+    <h2 id="tenderFormTitle" style="font:800 20px Manrope;margin:4px 0 14px">Create New Tender</h2>
+    <form id="tenderForm">
+      <input type="hidden" id="tenderFormMode" value="create">
+      <div class="form-grid">
+        <div class="formgroup">
+          <label>Tender Reference ID *</label>
+          <input type="text" id="tenderRefInput" name="tender_ref" required placeholder="MN/PWD/2026/001">
+        </div>
+        <div class="formgroup">
+          <label>Department *</label>
+          <select id="tenderDeptSelect" name="department_id" required></select>
+        </div>
+        <div class="formgroup form-full">
+          <label>Tender Title *</label>
+          <input type="text" id="tenderTitleInput" name="title" required placeholder="Improvement and Asphalting of Road Package">
+        </div>
+        <div class="formgroup">
+          <label>Estimated Value (₹ INR)</label>
+          <input type="number" step="0.01" id="tenderValueInput" name="estimated_value" placeholder="15000000">
+        </div>
+        <div class="formgroup">
+          <label>Initial Status</label>
+          <select id="tenderStatusSelect" name="status">
+            <option value="draft">Draft (Internal)</option>
+            <option value="published">Published</option>
+            <option value="awarded">Awarded</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="formgroup">
+          <label>Bid Open Date</label>
+          <input type="date" id="tenderBidOpenInput" name="bid_open_date">
+        </div>
+        <div class="formgroup">
+          <label>Bid Close Date</label>
+          <input type="date" id="tenderBidCloseInput" name="bid_close_date">
+        </div>
+        <div class="formgroup form-full">
+          <label>Location Label</label>
+          <input type="text" id="tenderLocLabelInput" name="location_label" placeholder="Imphal West District, Manipur">
+        </div>
+        <div class="formgroup">
+          <label>Latitude (SRID 4326)</label>
+          <input type="number" step="0.000001" id="tenderLatInput" name="latitude" placeholder="24.8170">
+        </div>
+        <div class="formgroup">
+          <label>Longitude (SRID 4326)</label>
+          <input type="number" step="0.000001" id="tenderLngInput" name="longitude" placeholder="93.9368">
+        </div>
+        <div class="formgroup form-full">
+          <label>Scope & Description</label>
+          <textarea id="tenderDescInput" name="description" placeholder="Provide scope of civil works, milestone expectations..."></textarea>
+        </div>
+      </div>
+      <p class="formerror" id="tenderFormError"></p>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+        <button type="submit" class="login submitlogin" style="width:auto;padding:0 24px">Save Tender Record</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- MODAL: Direct Award Dialog -->
+<div class="modalback" id="awardModal">
+  <section class="submodal-panel" style="width:min(480px, 100%)">
+    <div class="detailtop">
+      <span class="eyebrow">CONTRACT AWARD</span>
+      <button class="close" id="awardClose">×</button>
+    </div>
+    <h2 style="font:800 20px Manrope;margin:4px 0 10px">Contractor Award</h2>
+    <p class="detaildesc">Tender Reference: <strong id="awardTenderRef"></strong></p>
+    <form id="awardForm">
+      <input type="hidden" id="awardTenderRefInput">
+      <div class="formgroup" style="margin-bottom:12px">
+        <label>Awarded Contractor *</label>
+        <select id="awardContractorSelect" name="contractor_id" required></select>
+      </div>
+      <div class="formgroup" style="margin-bottom:12px">
+        <label>Final Award Value (₹ INR) *</label>
+        <input type="number" step="0.01" id="awardValueInput" name="awarded_value" required placeholder="4200000">
+      </div>
+      <div class="formgroup" style="margin-bottom:12px">
+        <label>AOC (Award of Contract) Date</label>
+        <input type="date" id="awardAocDateInput" name="aoc_date">
+      </div>
+      <div class="formgroup" style="margin-bottom:14px">
+        <label>Award Verification Status</label>
+        <select id="awardStatusSelect" name="status">
+          <option value="verified">Verified (Disclosed Publicly)</option>
+          <option value="pending_review">Pending Administrative Review</option>
+        </select>
+      </div>
+      <p class="formerror" id="awardFormError"></p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+        <button type="button" class="tbl-btn btn-delete" id="awardDeleteBtn" style="display:none;padding:8px 12px">Revoke Award</button>
+        <button type="submit" class="login submitlogin" style="width:auto;padding:0 24px">Save Award</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- MODAL: Document Upload (Docker Volume) -->
+<div class="modalback" id="docUploadModal">
+  <section class="submodal-panel" style="width:min(480px, 100%)">
+    <div class="detailtop">
+      <span class="eyebrow">ATTACH DOCUMENT</span>
+      <button class="close" id="docUploadClose">×</button>
+    </div>
+    <h2 style="font:800 20px Manrope;margin:4px 0 10px">Upload Tender Document</h2>
+    <p class="detaildesc">Target Tender: <strong id="docUploadTenderRef"></strong></p>
+    <form id="docUploadForm">
+      <input type="hidden" id="docUploadTenderRefInput">
+      <div class="formgroup" style="margin-bottom:12px">
+        <label>Document File (.pdf, .kmz, .kml, .csv, .zip) *</label>
+        <input type="file" id="docFileInput" required accept=".pdf,.kmz,.kml,.csv,.zip">
+      </div>
+      <div class="formgroup" style="margin-bottom:12px">
+        <label>Document Category</label>
+        <select id="docTypeSelect">
+          <option value="work_order">Official Work Order / Agreement</option>
+          <option value="kmz_route">Spatial Route Map (KMZ/KML)</option>
+          <option value="technical_spec">Technical Specifications (NIT)</option>
+          <option value="bill_of_quantities">Bill of Quantities (BOQ)</option>
+          <option value="general">General Tender Notice</option>
+        </select>
+      </div>
+      <div class="formgroup" style="margin-bottom:14px">
+        <label>Display Label</label>
+        <input type="text" id="docLabelInput" placeholder="Signed Contract & Sanction Order">
+      </div>
+      <button type="submit" class="login submitlogin" style="width:100%">Upload to Named Volume</button>
+    </form>
+  </section>
+</div>
+
+<!-- MODAL: Audit JSON Payload Inspector -->
+<div class="modalback" id="auditInspectModal">
+  <section class="submodal-panel" style="width:min(680px, 100%)">
+    <div class="detailtop">
+      <span class="eyebrow">AUDIT RECORD INSPECTOR</span>
+      <button class="close" id="auditInspectClose">×</button>
+    </div>
+    <h3 id="auditInspectHeader" style="margin:12px 0 16px">Audit Details</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <h4 style="margin:0 0 6px;color:#a3524c">Previous State (Old)</h4>
+        <pre id="auditInspectOld" style="background:#f7f9f6;border:1px solid var(--line);border-radius:8px;padding:12px;font:11px 'DM Mono';max-height:300px;overflow:auto"></pre>
+      </div>
+      <div>
+        <h4 style="margin:0 0 6px;color:#1e664a">New State (Committed)</h4>
+        <pre id="auditInspectNew" style="background:#f7f9f6;border:1px solid var(--line);border-radius:8px;padding:12px;font:11px 'DM Mono';max-height:300px;overflow:auto"></pre>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- MODAL: Contextual Confirmation Dialog -->
+<div class="modalback" id="confirmModal">
+  <div class="confirm-box">
+    <div class="detailtop" style="margin-bottom:8px">
+      <span class="eyebrow" style="color:var(--danger)">SECURITY CONFIRMATION</span>
+      <button class="close" id="confirmClose">×</button>
+    </div>
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmMessage">Are you sure you want to proceed?</p>
+    <div class="confirm-actions">
+      <button type="button" class="tbl-btn" id="confirmBtnCancel">Cancel</button>
+      <button type="button" class="login btn-danger" id="confirmBtnAction">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modular Admin Page Controller -->
+<script type="module" src="/js/admin_page.js"></script>
+</body>
+</html>

@@ -78,6 +78,35 @@ def reject(ref: str, body: schemas.RejectIn, db: Session = Depends(get_db), user
 
 # --- Direct Tender CRUD for Admin ---
 
+@admin.get("/tenders")
+def list_admin_tenders(
+    status: str | None = None,
+    q: str | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    user: models.User = Depends(require_roles("admin"))
+):
+    query = db.query(models.Tender)
+    if status:
+        query = query.filter(models.Tender.status == status)
+    if q:
+        query = query.filter(models.Tender.title.ilike(f"%{q}%") | models.Tender.tender_ref.ilike(f"%{q}%"))
+
+    total = query.count()
+    rows = query.options(
+        joinedload(models.Tender.department).joinedload(models.Department.officers),
+        joinedload(models.Tender.award).joinedload(models.Award.contractor).joinedload(models.Contractor.contacts),
+        joinedload(models.Tender.documents)
+    ).order_by(models.Tender.updated_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+
+    return {
+        "items": [services.public_tender(t, db, user) for t in rows],
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
 @admin.post("/tenders", status_code=201)
 def create_tender(body: schemas.TenderAdminCreate, db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
     d = db.get(models.Department, body.department_id)

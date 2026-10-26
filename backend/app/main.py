@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func
 from .admin_routes import admin
@@ -13,6 +14,7 @@ from .prototype_seed import seed_prototype_data
 from .public_routes import public
 from .security import hash_password
 from .spatial_seed import seed_spatial_data
+from .viewer_routes import viewer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,7 +48,16 @@ app.add_middleware(
 
 app.include_router(auth, prefix="/api/v1")
 app.include_router(public, prefix="/api/v1")
+app.include_router(viewer, prefix="/api/v1")
 app.include_router(admin, prefix="/api/v1")
+
+@app.get("/admin/v1", include_in_schema=False)
+def redirect_admin():
+    return RedirectResponse(url="/admin/v1/")
+
+@app.get("/department/v1", include_in_schema=False)
+def redirect_dept():
+    return RedirectResponse(url="/department/v1/")
 
 web_dir = Path(__file__).resolve().parents[2] / "public"
 app.mount("/", StaticFiles(directory=web_dir, html=True), name="web")

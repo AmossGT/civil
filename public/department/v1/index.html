@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1e664a">
+<title>OpenTender — Department Workspace (v1)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --paper: #f4f5f1;
+  --white: #ffffff;
+  --ink: #17251f;
+  --muted: #758078;
+  --line: #e4e8e2;
+  --line-dark: #cfd6cd;
+  --green: #1e664a;
+  --green-hover: #164f39;
+  --navy: #233e34;
+  --danger: #cf3d33;
+  --shadow: 0 16px 48px #20352b0c;
+  --shadow-lg: 0 24px 64px #1221191c;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+/* Top Bar */
+.topbar {
+  height: 72px;
+  border-bottom: 1px solid var(--line);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 38px;
+}
+.brand {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  font-family: Manrope, sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.7px;
+  text-decoration: none;
+  color: inherit;
+}
+.brandmark {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--green);
+  display: grid;
+  place-items: center;
+  color: white;
+}
+.brandmark svg { width: 19px; }
+.brand small {
+  display: block;
+  color: var(--green);
+  font: 10px 'DM Mono', monospace;
+  letter-spacing: 0.7px;
+  margin-top: 1px;
+}
+
+.topright { display: flex; gap: 14px; align-items: center; }
+.link-public {
+  color: var(--green);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: white;
+}
+.link-public:hover { background: #fafbf9; }
+
+.user-meta { display: flex; align-items: center; gap: 8px; }
+.user-email { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+.iconbtn {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.iconbtn:hover { background: #fafbf9; }
+
+/* Main Container */
+.viewer-container {
+  max-width: 1440px;
+  margin: 30px auto;
+  padding: 0 38px;
+}
+.viewer-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+}
+
+.viewer-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+}
+.eyebrow {
+  font: 11px 'DM Mono', monospace;
+  letter-spacing: 1.2px;
+  color: var(--green);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.eyebrow:before { content: ''; width: 19px; height: 1px; background: var(--green); }
+
+/* Metrics */
+.viewer-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.viewer-metric-card {
+  background: #fafbf9;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.viewer-metric-card small { font-size: 10px; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; font-family: 'DM Mono'; }
+.viewer-metric-card strong { font: 700 20px Manrope, sans-serif; color: var(--ink); }
+
+/* Grid Layout */
+.viewer-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.pane-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 20px;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.badge.awarded { background: #e5f3e8; color: #286740; }
+.badge.published { background: #edf1f6; color: #566a87; }
+.badge.draft { background: #fef3c7; color: #92400e; border: 1px dashed #f59e0b; }
+.badge.cancelled { background: #fbe9e8; color: #a3524c; }
+.badge-viewer { background: #e0f2ea; color: #156d49; }
+
+/* Tenders Card in Viewer */
+.viewer-tenders-grid { display: grid; gap: 12px; }
+.viewer-tender-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.viewer-tender-card:hover { border-color: #bcd4c4; box-shadow: var(--shadow); }
+.viewer-tender-card.draft-highlight {
+  border-left: 4px solid #f59e0b;
+  background: #fffcf4;
+}
+.viewer-tender-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ref-code { font: 10px 'DM Mono', monospace; color: #87948c; display: block; }
+.viewer-tender-header h4 { margin: 3px 0 6px; font: 700 15px Manrope, sans-serif; }
+.viewer-tender-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #637168;
+}
+.viewer-tender-desc {
+  font-size: 12px;
+  color: #7b8880;
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+.draft-pill-notice {
+  margin-top: 12px;
+  padding: 5px 10px;
+  background: #fef3c7;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* Officers & Activity Feed */
+.side-box {
+  background: #fafbf9;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+.side-box h4 { margin: 0 0 12px; font: 700 13px Manrope; }
+.officer-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 12px;
+  background: white;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  margin-top: 8px;
+  font-size: 12px;
+}
+.officer-desig { display: block; font-size: 10px; color: var(--muted); }
+
+.activityitem { display: flex; gap: 11px; padding: 11px 0; border-top: 1px solid #eff1ed; }
+.activityicon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: #edf3ee;
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  font-size: 11px;
+  flex: none;
+  font-style: normal;
+}
+.activityitem p { margin: 1px 0 3px; font-size: 11px; line-height: 1.5; }
+.activityitem small { font-size: 10px; color: #97a19a; }
+
+/* Table foot */
+.admin-table-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0 0;
+  color: #8a958d;
+  font-size: 11px;
+}
+.pages { display: flex; gap: 6px; align-items: center; }
+.pages button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 6px;
+  color: #7a857d;
+  display: grid;
+  place-items: center;
+}
+.pages button:disabled { opacity: 0.35; cursor: default; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #18392c;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 20px;
+  box-shadow: var(--shadow-lg);
+  display: none;
+  z-index: 999;
+  font-size: 12px;
+}
+.toast.show { display: block; }
+.empty { padding: 36px; text-align: center; color: #77827c; }
+
+/* Detail Modal */
+.modalback {
+  position: fixed;
+  inset: 0;
+  background: #14231dcc;
+  z-index: 100;
+  display: none;
+  justify-content: flex-end;
+}
+.modalback.open { display: flex; }
+.detail {
+  width: min(540px, 100%);
+  height: 100%;
+  background: var(--paper);
+  padding: 27px;
+  overflow: auto;
+  box-shadow: -20px 0 50px #14231d22;
+}
+.detailtop { display: flex; justify-content: space-between; align-items: center; }
+.detailtop .ref { font-size: 11px; }
+.close {
+  border: 1px solid var(--line);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: white;
+  font-size: 19px;
+  display: grid;
+  place-items: center;
+}
+.close:hover { background: #f5f6f3; }
+.detail h2 { font: 800 24px / 1.2 Manrope, sans-serif; letter-spacing: -0.8px; margin: 16px 0 10px; }
+.dcard { background: white; border: 1px solid var(--line); border-radius: 11px; padding: 17px; margin-top: 14px; }
+.dcard h4 { margin: 0 0 13px; font: 700 12px Manrope, sans-serif; }
+.dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dfield small { display: block; font-size: 10px; color: #909b94; margin-bottom: 5px; }
+.dfield b { font-size: 13px; }
+.detaildesc { font-size: 12px; line-height: 1.7; color: #6f7b73; }
+.contact { display: flex; justify-content: space-between; border-top: 1px solid #eff1ed; padding: 10px 0 0; margin-top: 10px; font-size: 11px; }
+.contact span { color: #7a857e; }
+.pdf { display: flex; align-items: center; justify-content: space-between; color: var(--green); text-decoration: none; font-weight: 700; font-size: 12px; }
+
+@media(max-width: 900px) {
+  .viewer-layout { grid-template-columns: 1fr; }
+  .viewer-metrics-grid { grid-template-columns: 1fr 1fr; }
+  .viewer-container { padding: 0 16px; }
+  .topbar { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brandmark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 19h16M5 19V9l7-5 7 5v10M9 19v-6h6v6M3 9l9-6 9 6"/>
+      </svg>
+    </div>
+    <div>
+      OpenTender
+      <small>DEPARTMENT WORKSPACE (v1)</small>
+    </div>
+  </div>
+
+  <div class="topright">
+    <a href="/" class="link-public">View Public Portal ↗</a>
+    <div class="user-meta">
+      <span class="badge badge-viewer" id="viewerUserBadge">Department Viewer</span>
+      <span class="user-email" id="viewerUserEmail">Loading...</span>
+    </div>
+    <button class="iconbtn" id="viewerLogoutBtn" title="Sign out">Log out ✕</button>
+  </div>
+</header>
+
+<main class="viewer-container">
+  <div class="viewer-card">
+    <div class="viewer-header-row">
+      <div>
+        <div class="eyebrow">DEPARTMENT WORKSPACE</div>
+        <h2 style="font:800 24px Manrope;margin:4px 0 0" id="viewerDeptName">Loading department…</h2>
+        <small id="viewerDeptDistrict" style="color:var(--muted);font-family:'DM Mono'"></small>
+      </div>
+      <span style="font-size:12px;color:var(--muted)">Endpoint: <code>/department/v1/</code></span>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="viewer-metrics-grid">
+      <div class="viewer-metric-card">
+        <small>Total Department Tenders</small>
+        <strong id="viewerStatTotal">—</strong>
+      </div>
+      <div class="viewer-metric-card">
+        <small>Internal Working Drafts</small>
+        <strong id="viewerStatDrafts" style="color:#d97706">—</strong>
+      </div>
+      <div class="viewer-metric-card">
+        <small>Published Tenders</small>
+        <strong id="viewerStatPublished" style="color:#2563eb">—</strong>
+      </div>
+      <div class="viewer-metric-card">
+        <small>Awarded Works</small>
+        <strong id="viewerStatAwarded" style="color:#16a34a">—</strong>
+      </div>
+      <div class="viewer-metric-card">
+        <small>Estimated Budget</small>
+        <strong id="viewerStatValue">—</strong>
+      </div>
+    </div>
+
+    <div class="viewer-layout">
+      <!-- Left Column: Department Tenders -->
+      <div>
+        <div class="pane-actions">
+          <h4 style="margin:0;font:700 14px Manrope">Department Tenders & Working Drafts</h4>
+          <select id="viewerStatusFilter" style="height:34px;padding:0 10px;border:1px solid var(--line);border-radius:6px;font-size:12px">
+            <option value="">All statuses</option>
+            <option value="draft">Drafts Only</option>
+            <option value="published">Published</option>
+            <option value="awarded">Awarded</option>
+          </select>
+        </div>
+        <div id="viewerTendersList">
+          <div class="empty">Loading department tenders…</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Officers & Audit -->
+      <div>
+        <div class="side-box">
+          <h4>Department Officers</h4>
+          <div id="viewerOfficersList">
+            <div class="empty">Loading contacts…</div>
+          </div>
+        </div>
+
+        <div class="side-box">
+          <h4>Department Activity Feed</h4>
+          <div id="viewerAuditList">
+            <div class="empty">Loading activity…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: Department Tender Inspection Detail -->
+<div class="modalback" id="modal">
+  <section class="detail">
+    <div class="detailtop">
+      <span class="ref" id="dref"></span>
+      <button class="close" id="close">×</button>
+    </div>
+    <div style="margin-top:16px" id="dbadge"></div>
+    <h2 id="dtitle"></h2>
+    <p class="detaildesc" id="ddesc"></p>
+    
+    <div class="dcard">
+      <h4>Value and timeline</h4>
+      <div class="dgrid" id="dgrid"></div>
+    </div>
+    <div class="dcard">
+      <h4>Department</h4>
+      <div id="ddept"></div>
+    </div>
+    <div class="dcard" id="dcontract"></div>
+    <div class="dcard">
+      <h4>Location</h4>
+      <p class="detaildesc" id="dloc" style="margin:0"></p>
+    </div>
+    <div class="dcard">
+      <h4>Documents & Route Plans</h4>
+      <a href="#" class="pdf" id="pdf">▧ &nbsp; Work order / tender document <span>↓</span></a>
+      <div id="recordDocuments" style="display:grid;gap:9px;margin-top:10px"></div>
+    </div>
+    <p class="detaildesc" style="margin-top:16px;font-size:10px">
+      Departmental documents are securely stored and retained in the civic Docker volume.
+    </p>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modular Department Viewer Page Controller -->
+<script type="module" src="/js/viewer_page.js"></script>
+</body>
+</html>
