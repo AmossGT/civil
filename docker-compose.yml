@@ -37,7 +37,7 @@ services:
     volumes:
       - ./backend:/app/backend
       - ./public:/app/public
-      - ./uploads:/app/uploads
+      - tender_documents:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -50,3 +50,4 @@ services:
 
 volumes:
   tender_db:
+  tender_documents:

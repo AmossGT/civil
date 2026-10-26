@@ -6,13 +6,17 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://tender:tender@localhost:5432/tenders"
     secret_key: str = "change-this-before-deploying"
     upload_dir: Path = Path("uploads")
-    allowed_origins: str = "http://localhost:5173"
+    allowed_origins: str = "http://localhost:8000,http://localhost:5173"
     cookie_secure: bool = False
     max_upload_bytes: int = 15 * 1024 * 1024
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
     load_prototype_data: bool = False
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+
     @property
     def cors_origins(self):
         return [v.strip() for v in self.allowed_origins.split(",") if v.strip()]
+
 settings = Settings()

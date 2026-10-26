@@ -45,9 +45,19 @@ class User(Base):
     id: Mapped[int]=mapped_column(primary_key=True)
     email: Mapped[str]=mapped_column(String(254),unique=True,index=True)
     password_hash: Mapped[str]=mapped_column(String(300))
-    role: Mapped[str]=mapped_column(String(20))
+    role: Mapped[str]=mapped_column(String(30))  # "admin" or "department_viewer"
     department_id: Mapped[int|None]=mapped_column(ForeignKey("departments.id",ondelete="SET NULL"))
+    token_version: Mapped[int]=mapped_column(Integer,default=1)
     is_active: Mapped[bool]=mapped_column(Boolean,default=True)
+
+class RefreshToken(Base):
+    __tablename__="refresh_tokens"
+    id: Mapped[int]=mapped_column(primary_key=True)
+    user_id: Mapped[int]=mapped_column(ForeignKey("users.id",ondelete="CASCADE"),index=True)
+    token_hash: Mapped[str]=mapped_column(String(128),unique=True,index=True)
+    expires_at: Mapped[datetime]=mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow)
+    revoked: Mapped[bool]=mapped_column(Boolean,default=False)
 
 class Tender(Base):
     __tablename__="tenders"
@@ -130,7 +140,3 @@ class AuditLog(Base):
     old_value: Mapped[dict|None]=mapped_column(JSON)
     new_value: Mapped[dict|None]=mapped_column(JSON)
     created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow,index=True)
-
-
-
-
