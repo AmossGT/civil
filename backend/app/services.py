@@ -122,5 +122,6 @@ def public_document(ref: str, document: models.TenderDocument) -> dict:
         "label": document.label,
         "filename": document.source_filename,
         "content_type": document.content_type,
+        "hint": (document.extra_data or {}).get("hint"),
         "download_url": f"/api/v1/tenders/{ref}/documents/{document.id}"
     }

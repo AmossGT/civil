@@ -76,7 +76,13 @@ def seed_prototype_data(db: Session) -> int:
                 tender.extra_data = existing_extra
 
         for item in record.get("documents", []):
-            if db.query(models.TenderDocument.id).filter_by(storage_name=item["storage_name"]).first():
+            existing_document = db.query(models.TenderDocument).filter_by(storage_name=item["storage_name"]).first()
+            if existing_document:
+                if item.get("hint"):
+                    document_extra = dict(existing_document.extra_data or {})
+                    if document_extra.get("hint") != item["hint"]:
+                        document_extra["hint"] = item["hint"]
+                        existing_document.extra_data = document_extra
                 continue
             source = DATA_FILE.parent / "seed_documents" / Path(item["source_filename"]).name
             if not source.is_file():
@@ -96,7 +102,11 @@ def seed_prototype_data(db: Session) -> int:
                 source_filename=item["source_filename"],
                 storage_name=item["storage_name"],
                 content_type="application/pdf",
-                extra_data={"prototype_data": True, "source": data["source"]},
+                extra_data={
+                    "prototype_data": True,
+                    "source": data["source"],
+                    **({"hint": item["hint"]} if item.get("hint") else {}),
+                },
             ))
 
     db.commit()

@@ -18,9 +18,19 @@
       "tender_id": "2024_ADBPW_2403_4",
       "tender_reference_number": "22/PD/PIU/MUR/PROC-CW/2024/01",
       "work_completion_days": 1095,
-      "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "grc.murdamip2024@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "AOCP4",
-      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP4 (1).pdf","storage_name":"prototype_documents/2024_ADBPW_2403_4-award-of-contract.pdf"}],
+      "documents": [
+        {
+          "document_type": "award_of_contract",
+          "label": "Award of Contract",
+          "source_filename": "AOCP4 (1).pdf",
+          "storage_name": "prototype_documents/2024_ADBPW_2403_4-award-of-contract.pdf"
+        }
+      ],
       "map_label": "Package 4 - Highway South Division"
     },
     {
@@ -35,9 +45,19 @@
       "tender_id": "2024_ADBPW_2403_3",
       "tender_reference_number": "22/PD/PIU/MUR/PROC-CW/2024/01",
       "work_completion_days": 1095,
-      "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "grc.murdamip2024@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "AOCP3",
-      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP3.pdf","storage_name":"prototype_documents/2024_ADBPW_2403_3-award-of-contract.pdf"}],
+      "documents": [
+        {
+          "document_type": "award_of_contract",
+          "label": "Award of Contract",
+          "source_filename": "AOCP3.pdf",
+          "storage_name": "prototype_documents/2024_ADBPW_2403_3-award-of-contract.pdf"
+        }
+      ],
       "map_label": "Package 3 - Imphal East Division (ED-2)"
     },
     {
@@ -52,9 +72,19 @@
       "tender_id": "2024_ADBPW_2403_2",
       "tender_reference_number": "22/PD/PIU/MUR/PROC-CW/2024/01",
       "work_completion_days": 1095,
-      "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "grc.murdamip2024@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "AOCP2",
-      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP2.pdf","storage_name":"prototype_documents/2024_ADBPW_2403_2-award-of-contract.pdf"}],
+      "documents": [
+        {
+          "document_type": "award_of_contract",
+          "label": "Award of Contract",
+          "source_filename": "AOCP2.pdf",
+          "storage_name": "prototype_documents/2024_ADBPW_2403_2-award-of-contract.pdf"
+        }
+      ],
       "map_label": "Package 2 - Imphal East Division (ED-1)"
     },
     {
@@ -64,14 +94,27 @@
       "awarded_value": 9474500000,
       "contract_date": "2025-01-30",
       "contractor": "DRAIPL-KSIPL Joint Venture",
-      "contractor_emails": ["hardik.agrawal@draipl.com", "dra.tender@draipl.com"],
+      "contractor_emails": [
+        "hardik.agrawal@draipl.com",
+        "dra.tender@draipl.com"
+      ],
       "division": "Imphal West Division",
       "tender_id": "2024_ADBPW_2403_1",
       "tender_reference_number": "22/PD/PIU/MUR/PROC-CW/2024/01",
       "work_completion_days": 1095,
-      "grievance_contact": {"email": "grc.murdamip2024@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "grc.murdamip2024@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "AOCP1",
-      "documents": [{"document_type":"award_of_contract","label":"Award of Contract","source_filename":"AOCP1.pdf","storage_name":"prototype_documents/2024_ADBPW_2403_1-award-of-contract.pdf"}],
+      "documents": [
+        {
+          "document_type": "award_of_contract",
+          "label": "Award of Contract",
+          "source_filename": "AOCP1.pdf",
+          "storage_name": "prototype_documents/2024_ADBPW_2403_1-award-of-contract.pdf"
+        }
+      ],
       "map_label": "Package 1 - Imphal West Division"
     },
     {
@@ -87,10 +130,30 @@
       "tender_id": "2023_ADBPW_2136_3",
       "tender_reference_number": "22/PD/PIU/IRR/PROC-CW/2022/03",
       "work_completion_days": 853,
-      "grievance_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
-      "project_office_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "eapmanipur@gmail.com",
+        "phone": "0385-7961886"
+      },
+      "project_office_contact": {
+        "email": "eapmanipur@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "LOAPackage3",
-      "documents": [{"document_type":"letter_of_acceptance","label":"Letter of Acceptance","source_filename":"LOAPackage3.pdf","storage_name":"prototype_documents/2023_ADBPW_2136_3-letter-of-acceptance.pdf"}],
+      "documents": [
+        {
+          "document_type": "letter_of_acceptance",
+          "label": "Letter of Acceptance",
+          "source_filename": "LOAPackage3.pdf",
+          "storage_name": "prototype_documents/2023_ADBPW_2136_3-letter-of-acceptance.pdf"
+        },
+        {
+          "document_type": "executive_summary",
+          "label": "Executive Summary of Imphal Ring Road Project",
+          "source_filename": "20240201-executive-summary-of-imphal-ring-road-project.pdf",
+          "storage_name": "prototype_documents/2023_ADBPW_2136_3-executive-summary.pdf",
+          "hint": "The map layout will be found at page 6"
+        }
+      ],
       "map_label": "Imphal Ring Road Package 3"
     },
     {
@@ -106,10 +169,30 @@
       "tender_id": "2023_ADBPW_2136_2",
       "tender_reference_number": "22/PD/PIU/IRR/PROC-CW/2022/03",
       "work_completion_days": 853,
-      "grievance_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
-      "project_office_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "eapmanipur@gmail.com",
+        "phone": "0385-7961886"
+      },
+      "project_office_contact": {
+        "email": "eapmanipur@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "LOAPackage2",
-      "documents": [{"document_type":"letter_of_acceptance","label":"Letter of Acceptance","source_filename":"LOAPackage2.pdf","storage_name":"prototype_documents/2023_ADBPW_2136_2-letter-of-acceptance.pdf"}],
+      "documents": [
+        {
+          "document_type": "letter_of_acceptance",
+          "label": "Letter of Acceptance",
+          "source_filename": "LOAPackage2.pdf",
+          "storage_name": "prototype_documents/2023_ADBPW_2136_2-letter-of-acceptance.pdf"
+        },
+        {
+          "document_type": "executive_summary",
+          "label": "Executive Summary of Imphal Ring Road Project",
+          "source_filename": "20240201-executive-summary-of-imphal-ring-road-project.pdf",
+          "storage_name": "prototype_documents/2023_ADBPW_2136_2-executive-summary.pdf",
+          "hint": "The map layout will be found at page 6"
+        }
+      ],
       "map_label": "Imphal Ring Road Package 2"
     },
     {
@@ -119,16 +202,39 @@
       "awarded_value": 3402000000,
       "contract_date": "2024-01-25",
       "contractor": "AKELIK-KSIPL Joint Venture",
-      "contractor_emails": ["info.akipl@gmail.com", "akconstruction1@rediffmail.com"],
+      "contractor_emails": [
+        "info.akipl@gmail.com",
+        "akconstruction1@rediffmail.com"
+      ],
       "contractor_phone": "+91 97390 09767",
       "division": "Imphal Ring Road Project",
       "tender_id": "2023_ADBPW_2136_1",
       "tender_reference_number": "22/PD/PIU/IRR/PROC-CW/2022/03",
       "work_completion_days": 853,
-      "grievance_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
-      "project_office_contact": {"email": "eapmanipur@gmail.com", "phone": "0385-7961886"},
+      "grievance_contact": {
+        "email": "eapmanipur@gmail.com",
+        "phone": "0385-7961886"
+      },
+      "project_office_contact": {
+        "email": "eapmanipur@gmail.com",
+        "phone": "0385-7961886"
+      },
       "reference_document_label": "LOAPackage1",
-      "documents": [{"document_type":"letter_of_acceptance","label":"Letter of Acceptance","source_filename":"LOAPackage1.pdf","storage_name":"prototype_documents/2023_ADBPW_2136_1-letter-of-acceptance.pdf"}],
+      "documents": [
+        {
+          "document_type": "letter_of_acceptance",
+          "label": "Letter of Acceptance",
+          "source_filename": "LOAPackage1.pdf",
+          "storage_name": "prototype_documents/2023_ADBPW_2136_1-letter-of-acceptance.pdf"
+        },
+        {
+          "document_type": "executive_summary",
+          "label": "Executive Summary of Imphal Ring Road Project",
+          "source_filename": "20240201-executive-summary-of-imphal-ring-road-project.pdf",
+          "storage_name": "prototype_documents/2023_ADBPW_2136_1-executive-summary.pdf",
+          "hint": "The map layout will be found at page 6"
+        }
+      ],
       "map_label": "Imphal Ring Road Package 1"
     }
   ]

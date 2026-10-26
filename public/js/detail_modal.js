@@ -109,6 +109,7 @@ export async function openTender(ref, opener = document.activeElement) {
                             <b>↓</b>
                         </a>
                         ${isKmz ? '<div class="kmz-hint"><span class="kmz-hint-icon" aria-hidden="true">ⓘ</span><span>Hint: To view this file, install Google Earth for mobile and Google Earth Pro for laptop.</span></div>' : ''}
+                        ${d.hint ? `<div class="kmz-hint"><span class="kmz-hint-icon" aria-hidden="true">ⓘ</span><span>Hint: ${escapeHtml(d.hint)}</span></div>` : ''}
                         ${isMapLayoutFile ? '<div style="display:grid;gap:3px;margin:5px 0 0 21px;color:#71839a"><strong style="font-size:11px;font-weight:600">• Map layout: Pdf</strong><small style="margin-left:14px;font-size:10px;font-style:italic;line-height:1.45">ⓘ Hint: The map layout is in the 6th page in the pdf provided above.</small></div>' : ''}
                     </div>
                 `;

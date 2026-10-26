@@ -929,7 +929,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .toolrow .filter { flex:1 1 auto; }
   .filters { flex-wrap:wrap; }
   .filters #dept { flex:1 1 100%; width:100%; min-width:0; }
-  .filters #status, .filters #range { flex:1 1 calc(50% - 6px); min-width:0; }
+  .filters #status { flex:1 1 calc(50% - 6px); min-width:0; }
   .tablefoot { padding:12px 14px; }
   .tablefoot { flex-wrap:wrap; gap:10px; }
 }
@@ -1067,12 +1067,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
               <option value="published">Published</option>
               <option value="awarded">Awarded</option>
             </select>
-            <select id="range">
-              <option value="">Any value</option>
-              <option value="under">Under ₹1 Cr</option>
-              <option value="mid">₹1–10 Cr</option>
-              <option value="high">Over ₹10 Cr</option>
-            </select>
+
           </div>
         </div>
 

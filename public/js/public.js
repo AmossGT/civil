@@ -43,14 +43,6 @@ function queryParams(page = state.page) {
     if ($('dept').value) p.set('department_id', $('dept').value);
     if ($('status').value) p.set('status', $('status').value);
 
-    const range = $('range').value;
-    if (range === 'under') p.set('max_value', '9999999.99');
-    if (range === 'mid') {
-        p.set('min_value', '10000000');
-        p.set('max_value', '100000000');
-    }
-    if (range === 'high') p.set('min_value', '100000000.01');
-
     const sort = $('sort').value;
     if (sort === 'value') p.set('sort', '-estimated_value');
     if (sort === 'closing') p.set('sort', 'bid_close_date');
@@ -293,13 +285,13 @@ function initDashboardEvents() {
         searchTimer = setTimeout(() => loadTenders(1), 250);
     });
 
-    ['dept', 'status', 'range', 'sort'].forEach(id => {
+    ['dept', 'status', 'sort'].forEach(id => {
         $(id).addEventListener('change', () => loadTenders(1));
     });
 
     $('clear').onclick = () => {
         $('search').value = '';
-        ['dept', 'status', 'range'].forEach(id => $(id).value = '');
+        ['dept', 'status'].forEach(id => $(id).value = '');
         $('sort').value = 'recent';
         loadTenders(1);
     };
