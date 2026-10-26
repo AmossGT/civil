@@ -1,4 +1,4 @@
-# OpenTender
+# Road Sathi
 
 A mobile-first tender transparency portal and FastAPI backend. Docker Compose runs the API and PostgreSQL/PostGIS; the API serves the portal and its JSON endpoints from one origin.
 

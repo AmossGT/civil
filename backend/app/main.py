@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
                 db.commit()
     yield
 
-app = FastAPI(title="OpenTender API", version="1.0.0", description="Public procurement transparency API", lifespan=lifespan)
+app = FastAPI(title="Road Sathi API", version="1.0.0", description="Public procurement transparency API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
