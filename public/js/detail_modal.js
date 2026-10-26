@@ -53,6 +53,14 @@ export async function openTender(ref, opener = document.activeElement) {
         $('dgrid').innerHTML = fields.join('') || '<p class="detaildesc">No value or timeline details are available.</p>';
         if (extra.project_scope) $('ddesc').textContent = extra.project_scope;
 
+        const grievanceContact = extra.grievance_contact || extra.project_office_contact;
+        const grievancePanel = $('dgrievance');
+        if (grievancePanel) {
+            grievancePanel.innerHTML = grievanceContact
+                ? `${grievanceContact.email ? `<div class="contact"><span>Email</span><b>${escapeHtml(grievanceContact.email)}</b></div>` : ''}${grievanceContact.phone ? `<div class="contact"><span>Phone</span><b>${escapeHtml(grievanceContact.phone)}</b></div>` : ''}`
+                : '<p class="detaildesc" style="margin:0">No contact details supplied.</p>';
+        }
+
         const emails = [...(extra.contractor_emails || []), ...(extra.contractor_email ? [extra.contractor_email] : [])];
         $('dcontract').innerHTML = contractor ? `
             <h4>${t.award.provisional ? 'Provisional award' : 'Awarded contractor'}</h4>

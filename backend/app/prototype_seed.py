@@ -36,6 +36,9 @@ def seed_prototype_data(db: Session) -> int:
         extra = {key: value for key, value in record.items() if key not in {
             "tender_ref", "title", "description", "awarded_value", "contractor", "documents"
         }}
+        contact = record.get("grievance_contact") or record.get("project_office_contact")
+        if contact:
+            extra["grievance_contact"] = contact
         extra.update({
             "prototype_data": True,
             "source": data["source"],
@@ -65,6 +68,12 @@ def seed_prototype_data(db: Session) -> int:
                 status="pending_review",
             ))
             imported += 1
+
+        if contact:
+            existing_extra = dict(tender.extra_data or {})
+            if existing_extra.get("grievance_contact") != contact:
+                existing_extra["grievance_contact"] = contact
+                tender.extra_data = existing_extra
 
         for item in record.get("documents", []):
             if db.query(models.TenderDocument.id).filter_by(storage_name=item["storage_name"]).first():
