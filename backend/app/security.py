@@ -24,7 +24,7 @@ def current_user(request:Request,db:Session=Depends(get_db))->User:
     try:
         data=_serializer().loads(token,max_age=28800); user=db.get(User,int(data["uid"]))
     except (BadSignature,SignatureExpired,ValueError,KeyError,TypeError): user=None
-    if not user or not user.is_active: raise HTTPException(401,"Session expired or inactive")
+    if not user or not user.is_active or user.role!="admin": raise HTTPException(401,"Session expired or inactive")
     return user
 def require_roles(*roles):
     def check(user:User=Depends(current_user)):

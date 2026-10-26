@@ -11,6 +11,7 @@ from .models import User
 from .prototype_seed import seed_prototype_data
 from .public_routes import public
 from .security import hash_password
+from .spatial_seed import seed_spatial_data
 from .workflow_routes import workflow
 
 @asynccontextmanager
@@ -19,6 +20,7 @@ async def lifespan(app:FastAPI):
     if settings.load_prototype_data:
         with SessionLocal() as db:
             seed_prototype_data(db)
+            seed_spatial_data(db)
     if settings.bootstrap_admin_email and settings.bootstrap_admin_password:
         with SessionLocal() as db:
             exists=db.query(User).filter(func.lower(User.email)==settings.bootstrap_admin_email.lower()).first()

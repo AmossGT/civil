@@ -34,7 +34,7 @@ class RejectIn(BaseModel): comment:str=Field(min_length=3,max_length=2000)
 class UserCreate(BaseModel):
     email:EmailStr
     password:str=Field(min_length=12,max_length=256)
-    role:str=Field(pattern="^(officer|admin)$")
+    role:str=Field(pattern="^admin$")
     department_id:int|None=None
 
 

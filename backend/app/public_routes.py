@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -37,7 +38,15 @@ def map_search(bbox:str=Query(description="west,south,east,north"),db:Session=De
     for t in rows:
         p=db.query(func.ST_Y(cast(t.location,Geometry)),func.ST_X(cast(t.location,Geometry))).filter(models.Tender.id==t.id).first()
         pins.append({"tender_ref":t.tender_ref,"title":t.title,"status":t.status,"latitude":float(p[0]),"longitude":float(p[1])})
-    return {"items":pins,"total":len(pins)}
+    simplified=func.ST_SimplifyPreserveTopology(cast(models.TenderSpatialFeature.geometry,Geometry),0.00004)
+    features_query=db.query(models.TenderSpatialFeature,models.Tender.tender_ref,models.Tender.title,models.Tender.status,func.ST_AsGeoJSON(simplified)).join(models.Tender).filter(
+        models.Tender.status.in_(["published","awarded"]),
+        func.ST_Intersects(models.TenderSpatialFeature.geometry,area),
+    ).order_by(models.Tender.tender_ref,models.TenderSpatialFeature.feature_name)
+    route_features=[]
+    for feature,ref,title,tender_status,geojson in features_query.all():
+        route_features.append({"type":"Feature","geometry":json.loads(geojson),"properties":{"tender_ref":ref,"tender_title":title,"tender_status":tender_status,"name":feature.feature_name,"source_filename":feature.source_filename,"geometry_type":feature.geometry_type,**(feature.properties or {})}})
+    return {"items":pins,"total":len(pins),"features":route_features,"feature_total":len(route_features)}
 @public.get("/stats")
 def public_stats(db:Session=Depends(get_db)):
     published=db.query(models.Tender).filter_by(status="published").count()

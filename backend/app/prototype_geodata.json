@@ -1,0 +1,29 @@
+{
+  "source_note": "Temporary prototype road-route geometry transcribed from the supplied KMZ files. Original KMZ files are retained as tender documents.",
+  "routes": [
+    {
+      "tender_ref": "2024_ADBPW_2403_1",
+      "source_filename": "Package 1- Imphal West Division (Total Road Length _ 172.858 km).kmz",
+      "document_label": "Package 1 route map (KMZ)",
+      "storage_name": "prototype_geodata/2024_ADBPW_2403_1-route-map.kmz"
+    },
+    {
+      "tender_ref": "2024_ADBPW_2403_2",
+      "source_filename": "Package 2 Imphal East Division (ED _ 1) (Total Road Length _ 141.032 km).kmz",
+      "document_label": "Package 2 route map (KMZ)",
+      "storage_name": "prototype_geodata/2024_ADBPW_2403_2-route-map.kmz"
+    },
+    {
+      "tender_ref": "2024_ADBPW_2403_3",
+      "source_filename": "Package 3-Imphal East Division (ED _ 2) (Total Road Length _ 122.209 km).kmz",
+      "document_label": "Package 3 route map (KMZ)",
+      "storage_name": "prototype_geodata/2024_ADBPW_2403_3-route-map.kmz"
+    },
+    {
+      "tender_ref": "2024_ADBPW_2403_4",
+      "source_filename": "Package 4-Highway South Division (Total Road Length _ 111.182 km).kmz",
+      "document_label": "Package 4 route map (KMZ)",
+      "storage_name": "prototype_geodata/2024_ADBPW_2403_4-route-map.kmz"
+    }
+  ]
+}

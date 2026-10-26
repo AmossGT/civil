@@ -74,6 +74,7 @@ class Tender(Base):
     department: Mapped[Department]=relationship(back_populates="tenders")
     award: Mapped['Award|None']=relationship(back_populates="tender",uselist=False,cascade="all, delete-orphan")
     documents: Mapped[list['TenderDocument']]=relationship(back_populates="tender",cascade="all, delete-orphan")
+    spatial_features: Mapped[list['TenderSpatialFeature']]=relationship(back_populates="tender",cascade="all, delete-orphan")
 
 class Award(Base):
     __tablename__="awards"
@@ -102,6 +103,22 @@ class TenderDocument(Base):
     uploaded_by: Mapped[int|None]=mapped_column(ForeignKey("users.id",ondelete="SET NULL"))
     created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow)
     tender: Mapped[Tender]=relationship(back_populates="documents")
+
+class TenderSpatialFeature(Base):
+    __tablename__="tender_spatial_features"
+    __table_args__=(
+        UniqueConstraint("tender_id","source_filename","source_feature_id",name="uq_tender_spatial_source_feature"),
+        Index("ix_tender_spatial_geometry_gist","geometry",postgresql_using="gist"),
+    )
+    id: Mapped[int]=mapped_column(primary_key=True)
+    tender_id: Mapped[int]=mapped_column(ForeignKey("tenders.id",ondelete="CASCADE"),index=True)
+    source_filename: Mapped[str]=mapped_column(String(255))
+    source_feature_id: Mapped[str]=mapped_column(String(100))
+    feature_name: Mapped[str]=mapped_column(String(400))
+    geometry_type: Mapped[str]=mapped_column(String(40))
+    geometry=mapped_column(Geography(geometry_type="GEOMETRY",srid=4326),nullable=False)
+    properties: Mapped[dict]=mapped_column(JSON,default=dict)
+    tender: Mapped[Tender]=relationship(back_populates="spatial_features")
 
 class AuditLog(Base):
     __tablename__="audit_log"
