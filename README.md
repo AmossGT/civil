@@ -74,7 +74,7 @@ Do not run `docker compose down -v` unless you intend to remove the local databa
 
 ## Tests and sample data
 
-The repository contains the sample records described above and an API integration verification script at [`backend/tests/verify_all.py`](backend/tests/verify_all.py). It checks health/authentication and token refresh, admin tender operations, department-viewer access restrictions, public visibility, map responses, CSV import behavior, and logout revocation.
+The repository contains the sample records described above and an API integration verification script at [`backend/tests/verify_all.py`](backend/tests/verify_all.py). It checks health/authentication and token refresh, admin tender operations, department-viewer access restrictions, public visibility, map responses, CSV import behavior, tender identifiers for the seven supplied packages, and logout revocation.
 
 The script uses fixed local test credentials (`admin@example.gov.in` / `change-this-local-password`) and writes test users and tender rows. Run it only against a disposable local database configured with those credentials, never against production or a database containing records you need to keep:
 
@@ -107,7 +107,7 @@ Interactive endpoint schemas are available at `/docs` while the API is running.
 
 ## License and supplied source materials
 
-The software source code in this repository is licensed under the MIT License; see [`LICENSE`](LICENSE). The MIT license does not grant rights to third-party or supplied tender PDFs, KMZ/map files, logos, marks, or other source materials. Those remain subject to the rights and terms of their respective owners. Check source-material permissions before redistributing those files.
+The Road Sathi software source code is licensed under the Apache License, Version 2.0; see [`LICENSE`](LICENSE). This license applies to the project software and does not grant rights to supplied or third-party tender PDFs, KMZ/map files, logos, marks, or other source materials. Those remain subject to their respective owners' rights and terms; check permissions before redistributing them.
 
 ## Production considerations
 

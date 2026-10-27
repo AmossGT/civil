@@ -206,7 +206,24 @@ def run_tests():
     assert status == 401, f"Logged out token should be revoked with 401! Got {status}: {me_err}"
     print("[PASS] 11. Instant token revocation on logout verified (token_version bump)")
 
-    print("\nALL 11 VERIFICATION TESTS PASSED SUCCESSFULLY!")
+    # 12. Public tender identifiers for every supplied prototype package
+    expected_identifiers = {
+        "2024_ADBPW_2403_1": "22/PD/PIU/MUR/PROC-CW/2024/01",
+        "2024_ADBPW_2403_2": "22/PD/PIU/MUR/PROC-CW/2024/01",
+        "2024_ADBPW_2403_3": "22/PD/PIU/MUR/PROC-CW/2024/01",
+        "2024_ADBPW_2403_4": "22/PD/PIU/MUR/PROC-CW/2024/01",
+        "2023_ADBPW_2136_1": "22/PD/PIU/IRR/PROC-CW/2022/03",
+        "2023_ADBPW_2136_2": "22/PD/PIU/IRR/PROC-CW/2022/03",
+        "2023_ADBPW_2136_3": "22/PD/PIU/IRR/PROC-CW/2022/03",
+    }
+    for tender_ref, expected_reference in expected_identifiers.items():
+        status, tender_data = req(f"/tenders/{tender_ref}")
+        assert status == 200, f"Tender detail failed for {tender_ref}: {status}, {tender_data}"
+        identifiers = tender_data.get("identifiers") or {}
+        assert identifiers.get("tender_id") == tender_ref, f"Tender ID mismatch for {tender_ref}: {identifiers}"
+        assert identifiers.get("reference_number") == expected_reference, f"Reference number mismatch for {tender_ref}: {identifiers}"
+    print("[PASS] 12. Tender ID and reference number are exposed for all seven prototype packages")
+    print("\nALL 12 VERIFICATION TESTS PASSED SUCCESSFULLY!")
 
 if __name__ == "__main__":
     run_tests()

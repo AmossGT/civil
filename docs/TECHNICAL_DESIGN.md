@@ -211,6 +211,6 @@ Configuration comes from Pydantic settings and the Compose environment. See the 
 
 ## 10. Verification and current limitations
 
-`backend/tests/verify_all.py` is an HTTP integration verification script covering health/auth, token refresh, admin tender operations, role separation, public visibility, map response shape, CSV validation/import, and logout revocation. It uses fixed local administrator credentials and writes rows; run it only against a disposable local database as described in the README. The repository also contains sample tender and route data; this document does not replace or modify that data.
+`backend/tests/verify_all.py` is an HTTP integration verification script covering health/auth, token refresh, admin tender operations, role separation, public visibility, map response shape, CSV validation/import, logout revocation, and the tender ID/reference-number relation for all seven prototype packages. It uses fixed local administrator credentials and writes rows; run it only against a disposable local database as described in the README. The repository also contains sample tender and route data; this document does not replace or modify that data.
 
 The Compose configuration is aimed at local development. Production operation still requires a hardened secret-management and HTTPS setup, restricted origins, persistent protected file storage, rate limiting, backups, and versioned database migrations. Prototype values and third-party source documents must retain their provenance and applicable rights.
