@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import cast, func
+from sqlalchemy import cast, func, or_
 from sqlalchemy.orm import Session, joinedload
 from geoalchemy2 import Geometry, WKTElement
 from . import models
@@ -95,7 +95,20 @@ def public_tender(t: models.Tender, db: Session, user: models.User | None = None
 
 def apply_filters(query, q=None, department_id=None, contractor_id=None, min_value=None, max_value=None, opens_after=None, closes_before=None):
     if q:
-        query = query.filter(models.Tender.title.ilike(f"%{q}%") | models.Tender.tender_ref.ilike(f"%{q}%"))
+        search_text = q.strip()
+        if search_text:
+            search_terms = [search_text]
+            if search_text.casefold() == "pwd":
+                search_terms.append("Public Works Department")
+            search_conditions = []
+            for term in search_terms:
+                pattern = f"%{term}%"
+                search_conditions.extend([
+                    models.Tender.title.ilike(pattern),
+                    models.Tender.tender_ref.ilike(pattern),
+                    models.Tender.department.has(models.Department.name.ilike(pattern)),
+                ])
+            query = query.filter(or_(*search_conditions))
     if department_id is not None:
         query = query.filter(models.Tender.department_id == department_id)
     if contractor_id is not None:

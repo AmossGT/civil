@@ -133,7 +133,7 @@ export async function loadDepartments() {
     try {
         state.departments = await api('/departments');
         $('dept').innerHTML = '<option value="">All departments</option>' +
-            state.departments.map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
+            state.departments.map(d => `<option value="${d.id}">${escapeHtml(d.name.replace(/\s*-\s*ADB\s+Tenders\s*\/\s*Project\s+Implementation\s+Unit\s*$/i, ""))}</option>`).join('');
     } catch (e) {
         toast('Could not load department filters: ' + e.message);
     }
@@ -150,11 +150,13 @@ export async function loadStats() {
         $('awardCount').textContent = `${Number(s.awards_disclosed).toLocaleString('en-IN')} awards`;
         $('lastUpdated').textContent = s.prototype_records ? 'Prototype · unverified' : 'Live API data';
         $('dataQuality').textContent = s.prototype_records ? 'Supplied notes awaiting verification' : 'Data verified by participating departments';
-        $('prototypeNotice').style.display = s.prototype_records ? 'block' : 'none';
-        $('awardProgress').style.width = s.awards_disclosed ? '100%' : '0%';
+        
+        const awardProgress = $('awardProgress');
+        if (awardProgress) awardProgress.style.width = s.awards_disclosed ? '100%' : '0%';
     } catch (e) {
-        $('lastUpdated').textContent = 'Data unavailable';
-        toast('Could not load public metrics: ' + e.message);
+        const lastUpdated = $('lastUpdated');
+        if (lastUpdated) lastUpdated.textContent = 'Data unavailable';
+
     }
 }
 
