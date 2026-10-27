@@ -16,7 +16,8 @@ def paged(db, query, page, page_size, user=None):
     rows = query.options(
         joinedload(models.Tender.department).joinedload(models.Department.officers),
         joinedload(models.Tender.award).joinedload(models.Award.contractor).joinedload(models.Contractor.contacts),
-        joinedload(models.Tender.documents)
+        joinedload(models.Tender.documents),
+        joinedload(models.Tender.procurement_identifier)
     ).order_by(models.Tender.updated_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
     return {"items": [services.public_tender(t, db, user) for t in rows], "total": total, "page": page, "page_size": page_size}
 

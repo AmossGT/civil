@@ -84,8 +84,17 @@ class Tender(Base):
     department: Mapped[Department]=relationship(back_populates="tenders")
     award: Mapped['Award|None']=relationship(back_populates="tender",uselist=False,cascade="all, delete-orphan")
     documents: Mapped[list['TenderDocument']]=relationship(back_populates="tender",cascade="all, delete-orphan")
+    procurement_identifier: Mapped['TenderIdentifier|None']=relationship(back_populates="tender",uselist=False,cascade="all, delete-orphan")
     spatial_features: Mapped[list['TenderSpatialFeature']]=relationship(back_populates="tender",cascade="all, delete-orphan")
 
+class TenderIdentifier(Base):
+    __tablename__="tender_identifiers"
+    __table_args__=(UniqueConstraint("tender_id",name="uq_tender_identifiers_tender_id"),)
+    id: Mapped[int]=mapped_column(primary_key=True)
+    tender_id: Mapped[int]=mapped_column(ForeignKey("tenders.id",ondelete="CASCADE"),index=True)
+    tender_identifier: Mapped[str|None]=mapped_column(String(160),nullable=True)
+    reference_number: Mapped[str|None]=mapped_column(String(200),nullable=True)
+    tender: Mapped[Tender]=relationship(back_populates="procurement_identifier")
 class Award(Base):
     __tablename__="awards"
     __table_args__=(UniqueConstraint("tender_id",name="uq_awards_tender_id"),)

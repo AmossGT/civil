@@ -34,7 +34,7 @@ def seed_prototype_data(db: Session) -> int:
                 db.flush()
 
         extra = {key: value for key, value in record.items() if key not in {
-            "tender_ref", "title", "description", "awarded_value", "contractor", "documents"
+            "tender_ref", "title", "description", "awarded_value", "contractor", "documents", "tender_id", "tender_reference_number"
         }}
         contact = record.get("grievance_contact") or record.get("project_office_contact")
         if contact:
@@ -69,6 +69,27 @@ def seed_prototype_data(db: Session) -> int:
             ))
             imported += 1
 
+        external_id = record.get("tender_id")
+        reference_number = record.get("tender_reference_number")
+        identifier = db.query(models.TenderIdentifier).filter_by(tender_id=tender.id).first()
+        if identifier is None:
+            db.add(models.TenderIdentifier(
+                tender_id=tender.id,
+                tender_identifier=external_id,
+                reference_number=reference_number,
+            ))
+        else:
+            identifier.tender_identifier = external_id
+            identifier.reference_number = reference_number
+
+        existing_extra = dict(tender.extra_data or {})
+        removed_legacy_ids = False
+        for identifier_key in ("tender_id", "tender_reference_number"):
+            if identifier_key in existing_extra:
+                existing_extra.pop(identifier_key)
+                removed_legacy_ids = True
+        if removed_legacy_ids:
+            tender.extra_data = existing_extra
         if contact:
             existing_extra = dict(tender.extra_data or {})
             if existing_extra.get("grievance_contact") != contact:

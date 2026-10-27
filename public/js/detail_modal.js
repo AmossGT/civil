@@ -34,6 +34,14 @@ export async function openTender(ref, opener = document.activeElement) {
         addField('AOC date', t.award?.aoc_date ? dateText(t.award.aoc_date) : null);
         $('dgrid').innerHTML = fields.length ? fields.join('') : '<p class="detaildesc">No value or timeline details are available.</p>';
 
+        const identifiers = t.identifiers || {};
+        const identifierPanel = $('didentifiers');
+        if (identifierPanel) {
+            const identifierFields = [];
+            if (identifiers.tender_id) identifierFields.push(`<div class="dfield"><small>Tender ID</small><b>${escapeHtml(identifiers.tender_id)}</b></div>`);
+            if (identifiers.reference_number) identifierFields.push(`<div class="dfield"><small>Reference number</small><b>${escapeHtml(identifiers.reference_number)}</b></div>`);
+            identifierPanel.innerHTML = identifierFields.join('') || '<p class="detaildesc">Tender ID and reference number not provided.</p>';
+        }
         const officers = t.department?.officers || [];
         $('ddept').innerHTML = `
             ${t.department?.name ? `<b>${escapeHtml(t.department.name)}</b>` : '<b>Department not provided</b>'}

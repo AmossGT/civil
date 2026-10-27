@@ -2,7 +2,7 @@
 import { $, api, escapeHtml, money, dateText, timeText, statusName, statusClass } from './api.js';
 import { toast, initConfirmDialog, initGlobalModalListeners } from './ui.js';
 import { authState, checkAuth, initAuth } from './auth.js';
-import { openTender, initDetailModal } from './detail_modal.js';
+import { openTender, initDetailModal } from './detail_modal.js?v=tender-identifiers-20261027';
 
 const state = {
     items: [],
