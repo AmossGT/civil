@@ -136,6 +136,24 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .sub { color: #77827c; font-size: 15px; margin: 0; }
 .hero-meta { text-align: right; color: #7a857f; font-size: 12px; line-height: 1.8; }
 .hero-meta b { color: var(--ink); font-family: 'DM Mono', monospace; font-size: 17px; }
+.hero-meta.verification-status {
+  min-width: min(100%, 260px);
+  padding: 12px 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  color: #166534;
+  text-align: left;
+  line-height: 1.5;
+}
+.hero-meta.verification-status b {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #166534;
+  font: 700 16px 'DM Sans', sans-serif;
+}
+.verification-status .verified-date { display: block; margin-top: 3px; color: #15803d; font-size: 12px; }
 
 /* KPI Stats */
 .stats {
@@ -290,6 +308,32 @@ h1, h2, h3, h4, p { margin-top: 0; }
   background-color: #e8eee8;
   position: relative;
 }
+.map-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 12px 12px;
+  padding: 12px 14px;
+  color: #704b12;
+  background: #fff8e7;
+  border: 1px solid #f0d28c;
+  border-radius: 9px;
+}
+.map-disclaimer-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: #fff;
+  background: #b7791f;
+  font: 700 13px/1 'DM Sans', sans-serif;
+}
+.map-disclaimer-content { min-width: 0; }
+.map-disclaimer-title { margin: 0 0 3px; color: #704b12; font-size: 13px; font-weight: 700; }
+.map-disclaimer-description { margin: 0; color: #765d32; font-size: 12px; line-height: 1.5; }
 .maplabel { position: absolute; top: 12px; left: 13px; font: 9px 'DM Mono', monospace; color: #6f8075; letter-spacing: 0.7px; z-index: 2; }
 .pin {
   position: absolute;
@@ -975,10 +1019,9 @@ h1, h2, h3, h4, p { margin-top: 0; }
         <h1>Public money,<br><em>open to all.</em></h1>
         <p class="sub">Explore tenders, track public works, and follow every award.</p>
       </div>
-      <div class="hero-meta">
-        LAST UPDATED<br>
-        <b id="lastUpdated">Loading</b><br>
-        <span id="dataQuality">Data verified by participating departments</span>
+      <div class="hero-meta verification-status" role="status" aria-label="Prototype verified">
+        <b id="lastUpdated"><span aria-hidden="true">✓</span>Prototype verified</b>
+        <span class="verified-date" id="dataQuality">Verified Date: 27/10/2026</span>
       </div>
     </section>
 <!-- Public Key Metrics -->
@@ -1089,6 +1132,13 @@ h1, h2, h3, h4, p { margin-top: 0; }
             <h3>Project road routes</h3>
             <button id="mapbtn">Explore map ↗</button>
           </div>
+          <aside class="map-disclaimer" role="note" aria-labelledby="mapDisclaimerTitle">
+            <span class="map-disclaimer-icon" aria-hidden="true">i</span>
+            <div class="map-disclaimer-content">
+              <h4 class="map-disclaimer-title" id="mapDisclaimerTitle">Map Feature Under Development</h4>
+              <p class="map-disclaimer-description">The map section is currently under development and may not function as expected in this prototype. We are working to make it fully operational.</p>
+            </div>
+          </aside>
           <div class="mapbox" id="mapbox">
             <span class="maplabel">MANIPUR · ACTIVE PROJECTS</span>
             <span class="empty mapempty">Loading map records…</span>

@@ -148,15 +148,9 @@ export async function loadStats() {
         $('statDepartments').textContent = Number(s.departments).toLocaleString('en-IN');
         $('cardAwardValue').textContent = money(s.total_awarded_value);
         $('awardCount').textContent = `${Number(s.awards_disclosed).toLocaleString('en-IN')} awards`;
-        $('lastUpdated').textContent = s.prototype_records ? 'Prototype · unverified' : 'Live API data';
-        $('dataQuality').textContent = s.prototype_records ? 'Supplied notes awaiting verification' : 'Data verified by participating departments';
-        
         const awardProgress = $('awardProgress');
         if (awardProgress) awardProgress.style.width = s.awards_disclosed ? '100%' : '0%';
     } catch (e) {
-        const lastUpdated = $('lastUpdated');
-        if (lastUpdated) lastUpdated.textContent = 'Data unavailable';
-
     }
 }
 
