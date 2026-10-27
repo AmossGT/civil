@@ -25,13 +25,15 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-tender}:${POSTGRES_PASSWORD:-tender}@db:5432/${POSTGRES_DB:-tenders}
       SECRET_KEY: ${SECRET_KEY:-local-only-change-before-deploying}
-      UPLOAD_DIR: /app/uploads
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8000}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-15728640}
       BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.gov.in}
       BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-change-this-local-password}
       LOAD_PROTOTYPE_DATA: ${LOAD_PROTOTYPE_DATA:-true}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
     ports:
       - "8000:8000"
     volumes:
