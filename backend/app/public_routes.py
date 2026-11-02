@@ -118,16 +118,18 @@ def map_search(bbox: str = Query(description="west,south,east,north"), db: Sessi
         raise HTTPException(422, "bbox coordinates are out of range")
 
     envelope = func.ST_MakeEnvelope(west, south, east, north, 4326)
+    visible_records = services.visible_tenders(db).options(joinedload(models.Tender.department)).limit(5000).all()
+    district_by_ref = {tender.tender_ref: tender.department.district for tender in visible_records}
     rows = services.visible_tenders(db).filter(
         models.Tender.location.isnot(None),
         func.ST_Intersects(cast(models.Tender.location, Geometry), envelope)
-    ).limit(1000).all()
+    ).limit(5000).all()
 
     pins = []
     for t in rows:
         p = db.query(func.ST_Y(cast(t.location, Geometry)), func.ST_X(cast(t.location, Geometry))).filter(models.Tender.id == t.id).first()
         if p and p[0] is not None:
-            pins.append({"tender_ref": t.tender_ref, "title": t.title, "status": t.status, "latitude": float(p[0]), "longitude": float(p[1])})
+            pins.append({"tender_ref": t.tender_ref, "title": t.title, "status": t.status, "district": district_by_ref.get(t.tender_ref), "latitude": float(p[0]), "longitude": float(p[1])})
 
     simplified = func.ST_SimplifyPreserveTopology(cast(models.TenderSpatialFeature.geometry, Geometry), 0.00004)
     features_query = db.query(
@@ -139,7 +141,7 @@ def map_search(bbox: str = Query(description="west,south,east,north"), db: Sessi
     ).join(models.Tender).filter(
         models.Tender.status.in_(["published", "awarded"]),
         func.ST_Intersects(cast(models.TenderSpatialFeature.geometry, Geometry), envelope),
-    ).order_by(models.Tender.tender_ref, models.TenderSpatialFeature.feature_name).limit(100)
+    ).order_by(models.Tender.tender_ref, models.TenderSpatialFeature.feature_name).limit(5000)
 
     route_features = []
     for feature, ref, title, tender_status, geojson in features_query.all():
@@ -153,10 +155,33 @@ def map_search(bbox: str = Query(description="west,south,east,north"), db: Sessi
                 "name": feature.feature_name,
                 "source_filename": feature.source_filename,
                 "geometry_type": feature.geometry_type,
-                **(feature.properties or {})
+                **(feature.properties or {}),
+                "district": district_by_ref.get(ref),
             }
         })
-    return {"items": pins, "total": len(pins), "features": route_features, "feature_total": len(route_features)}
+    mapped_refs = {item["tender_ref"] for item in pins}
+    mapped_refs.update(feature["properties"]["tender_ref"] for feature in route_features)
+    unmapped = [
+        {"tender_ref": tender.tender_ref, "title": tender.title,
+         "district": tender.department.district,
+         "reason": "No geographic coordinates or road geometry are available in RoadSathi."}
+        for tender in visible_records
+        if tender.tender_ref not in mapped_refs and tender.location is None
+    ]
+    districts = sorted({district for district in district_by_ref.values() if district})
+    return {
+        "items": pins,
+        "total": len(pins),
+        "features": route_features,
+        "feature_total": len(route_features),
+        "districts": districts,
+        "coverage": {
+            "public_tender_total": len(visible_records),
+            "plotted_tender_total": len(mapped_refs),
+            "district_unavailable": any(not district for district in district_by_ref.values()),
+            "unmapped_tenders": unmapped,
+        },
+    }
 
 @public.get("/stats")
 def public_stats(db: Session = Depends(get_db)):

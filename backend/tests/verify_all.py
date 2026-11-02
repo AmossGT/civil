@@ -151,8 +151,9 @@ def run_tests():
     status, map_res = req("/tenders/map?bbox=93.85,24.7,94.02,24.91")
     assert status in (200, 201), f"Map search failed: {status}, {map_res}"
     assert "features" in map_res, "features array missing in map response"
-    assert len(map_res["features"]) <= 100, f"Features limit exceeded: {len(map_res['features'])}"
-    print(f"[PASS] 8. PostGIS map query bounded: {len(map_res['features'])} features returned (<= 100)")
+    assert len(map_res["features"]) <= 5000, f"Features limit exceeded: {len(map_res['features'])}"
+    assert "districts" in map_res and "coverage" in map_res, "Map district and coverage metadata missing"
+    print(f"[PASS] 8. PostGIS map query bounded: {len(map_res['features'])} features returned (<= 5000)")
 
     # 9. Two-Pass Atomic CSV Import
     boundary = "----TestBoundaryXYZ"
