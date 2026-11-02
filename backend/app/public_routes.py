@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -83,6 +84,28 @@ def nearby(
         models.Tender.location.isnot(None),
         func.ST_DWithin(models.Tender.location, point, radius_km * 1000)
     ).order_by(func.ST_Distance(models.Tender.location, point))
+    return paged(db, query, page, page_size, user)
+
+@public.get("/tenders/geo-search")
+def geo_search(
+    lat: float = Query(ge=-90, le=90),
+    lng: float = Query(ge=-180, le=180),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    user: models.User | None = Depends(get_current_user),
+):
+    """Find visible tenders associated with checkpoints covering the selected point."""
+    matches = set()
+    for checkpoint in db.query(models.GeoCheckpoint).all():
+        lat1, lat2 = math.radians(lat), math.radians(float(checkpoint.latitude))
+        dlat = lat2 - lat1
+        dlng = math.radians(float(checkpoint.longitude) - lng)
+        hav = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+        distance_m = 6371000 * 2 * math.asin(min(1, math.sqrt(hav)))
+        if distance_m <= float(checkpoint.radius_m):
+            matches.update(link.tender_id for link in checkpoint.tenders)
+    query = services.scoped_tenders(db, user).filter(models.Tender.id.in_(matches)) if matches else services.scoped_tenders(db, user).filter(models.Tender.id == -1)
     return paged(db, query, page, page_size, user)
 
 @public.get("/tenders/map")

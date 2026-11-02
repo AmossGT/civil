@@ -94,6 +94,13 @@ class ContactCreate(BaseModel):
     role: str
     office_phone: str | None = None
 
+class GeoCheckpointIn(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    radius_m: float = Field(gt=0, le=500000)
+    tender_refs: list[str] = Field(min_length=1, max_length=100)
+
 class RejectIn(BaseModel):
     comment: str = Field(min_length=3, max_length=2000)
 

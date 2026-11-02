@@ -12,6 +12,71 @@ from .security import hash_password, rate_limit, require_roles
 
 admin = APIRouter(prefix="/admin", tags=["Admin Management"])
 
+def checkpoint_out(checkpoint):
+    return {
+        "id": checkpoint.id, "name": checkpoint.name,
+        "latitude": float(checkpoint.latitude), "longitude": float(checkpoint.longitude),
+        "radius_m": float(checkpoint.radius_m),
+        "tender_refs": [link.tender.tender_ref for link in checkpoint.tenders if link.tender],
+    }
+
+def set_checkpoint_tenders(db, checkpoint, refs):
+    unique_refs = list(dict.fromkeys(refs))
+    tenders = db.query(models.Tender).filter(models.Tender.tender_ref.in_(unique_refs)).all()
+    by_ref = {t.tender_ref: t for t in tenders}
+    missing = [ref for ref in unique_refs if ref not in by_ref]
+    if missing:
+        raise HTTPException(422, f"Unknown tender reference(s): {', '.join(missing)}")
+    desired_ids = [by_ref[ref].id for ref in unique_refs]
+    existing = {link.tender_id: link for link in checkpoint.tenders}
+    checkpoint.tenders = [
+        existing.get(tender_id) or models.GeoCheckpointTender(tender_id=tender_id)
+        for tender_id in desired_ids
+    ]
+
+@admin.get("/geo-checkpoints")
+def list_geo_checkpoints(db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
+    return [checkpoint_out(c) for c in db.query(models.GeoCheckpoint).order_by(models.GeoCheckpoint.id).all()]
+
+@admin.post("/geo-checkpoints", status_code=201)
+def create_geo_checkpoint(body: schemas.GeoCheckpointIn, db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
+    checkpoint = models.GeoCheckpoint(name=body.name, latitude=body.latitude, longitude=body.longitude, radius_m=body.radius_m)
+    db.add(checkpoint)
+    db.flush()
+    set_checkpoint_tenders(db, checkpoint, body.tender_refs)
+    db.flush()
+    result = checkpoint_out(checkpoint)
+    services.audit(db, user.id, "create", "geo_checkpoints", checkpoint.id, None, result)
+    commit(db)
+    return result
+
+@admin.put("/geo-checkpoints/{checkpoint_id}")
+def update_geo_checkpoint(checkpoint_id: int, body: schemas.GeoCheckpointIn, db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
+    checkpoint = db.get(models.GeoCheckpoint, checkpoint_id)
+    if not checkpoint:
+        raise HTTPException(404, "Checkpoint not found")
+    old = checkpoint_out(checkpoint)
+    checkpoint.name, checkpoint.latitude = body.name, body.latitude
+    checkpoint.longitude, checkpoint.radius_m = body.longitude, body.radius_m
+    set_checkpoint_tenders(db, checkpoint, body.tender_refs)
+    db.flush()
+    result = checkpoint_out(checkpoint)
+    services.audit(db, user.id, "update", "geo_checkpoints", checkpoint.id, old, result)
+    commit(db)
+    return result
+
+@admin.delete("/geo-checkpoints/{checkpoint_id}")
+def delete_geo_checkpoint(checkpoint_id: int, db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
+    checkpoint = db.get(models.GeoCheckpoint, checkpoint_id)
+    if not checkpoint:
+        raise HTTPException(404, "Checkpoint not found")
+    old = checkpoint_out(checkpoint)
+    checkpoint_id = checkpoint.id
+    db.delete(checkpoint)
+    services.audit(db, user.id, "delete", "geo_checkpoints", checkpoint_id, old, None)
+    commit(db)
+    return {"ok": True, "id": checkpoint_id}
+
 def commit(db):
     try:
         db.commit()

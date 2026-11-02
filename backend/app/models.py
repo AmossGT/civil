@@ -139,6 +139,23 @@ class TenderSpatialFeature(Base):
     properties: Mapped[dict]=mapped_column(JSON,default=dict)
     tender: Mapped[Tender]=relationship(back_populates="spatial_features")
 
+class GeoCheckpoint(Base):
+    __tablename__ = "geo_checkpoints"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    latitude: Mapped[float] = mapped_column(Numeric(10, 7))
+    longitude: Mapped[float] = mapped_column(Numeric(10, 7))
+    radius_m: Mapped[float] = mapped_column(Numeric(12, 2))
+    tenders: Mapped[list['GeoCheckpointTender']] = relationship(cascade="all, delete-orphan")
+
+class GeoCheckpointTender(Base):
+    __tablename__ = "geo_checkpoint_tenders"
+    __table_args__ = (UniqueConstraint("checkpoint_id", "tender_id", name="uq_checkpoint_tender"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    checkpoint_id: Mapped[int] = mapped_column(ForeignKey("geo_checkpoints.id", ondelete="CASCADE"), index=True)
+    tender_id: Mapped[int] = mapped_column(ForeignKey("tenders.id", ondelete="CASCADE"), index=True)
+    tender: Mapped[Tender] = relationship()
+
 class AuditLog(Base):
     __tablename__="audit_log"
     id: Mapped[int]=mapped_column(primary_key=True)

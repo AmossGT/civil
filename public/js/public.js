@@ -10,7 +10,11 @@ const state = {
     page: 1,
     pageSize: 5,
     departments: [],
-    nearby: false
+    nearby: false,
+    map: null,
+    selectedMarker: null,
+    mapLocation: null,
+    mapPage: 1
 };
 
 const mapBounds = { west: 93.85, south: 24.70, east: 94.02, north: 24.91 };
@@ -33,6 +37,7 @@ function showPage() {
         if (active) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
     });
+    if (page === 'map' && state.map) window.setTimeout(() => state.map.invalidateSize(), 100);
     window.scrollTo(0, 0);
 }
 
@@ -49,10 +54,10 @@ function queryParams(page = state.page) {
     return p;
 }
 
-export function renderList(items = state.items, total = state.total, allowPages = true) {
-    const list = $('list');
+export function renderList(items = state.items, total = state.total, allowPages = true, listId = 'list', emptyMessage = 'No public tenders match these filters.') {
+    const list = $(listId);
     if (!items.length) {
-        list.innerHTML = '<div class="empty">No public tenders match these filters.</div>';
+        list.innerHTML = `<div class="empty">${escapeHtml(emptyMessage)}</div>`;
     } else {
         list.innerHTML = items.map(t => {
             const dept = t.department?.name || 'Department';
@@ -87,6 +92,7 @@ export function renderList(items = state.items, total = state.total, allowPages 
         });
     }
 
+    if (listId !== 'list') return;
     $('count').textContent = `${total.toLocaleString('en-IN')} records`;
     $('pageSummary').textContent = allowPages
         ? `Showing ${items.length ? ((state.page - 1) * state.pageSize + 1) : 0}–${Math.min(state.page * state.pageSize, total)} of ${total.toLocaleString('en-IN')} records`
@@ -214,31 +220,55 @@ function renderRoutes(box, features) {
 }
 
 export async function loadMap() {
+    if (!window.L || state.map) return;
+    state.map = window.L.map('mapbox').setView([24.82, 93.94], 10);
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(state.map);
+    state.map.on('click', event => searchMapLocation(event.latlng.lat, event.latlng.lng));
+    window.setTimeout(() => state.map?.invalidateSize(), 100);
     try {
         const b = mapBounds;
         const data = await api(`/tenders/map?bbox=${b.west},${b.south},${b.east},${b.north}`);
-        const box = $('mapbox');
-        box.querySelectorAll('.pin, .mapempty, .route-layer').forEach(x => x.remove());
-
-        for (const t of data.items) {
-            const x = Math.max(4, Math.min(96, (t.longitude - b.west) / (b.east - b.west) * 100));
-            const y = Math.max(16, Math.min(92, 100 - (t.latitude - b.south) / (b.north - b.south) * 100));
-            const pin = document.createElement('i');
-            pin.className = 'pin ' + (t.status === 'awarded' ? 'p2' : '');
-            pin.style.left = x + '%';
-            pin.style.top = y + '%';
-            pin.title = t.title;
-            pin.onclick = () => openTender(t.tender_ref);
-            box.append(pin);
+        if (data.features?.length) {
+            window.L.geoJSON({ type: 'FeatureCollection', features: data.features }, {
+                style: feature => ({ color: packageColors[feature.properties.tender_ref] || '#1e5a9b', weight: 4 }),
+                onEachFeature: (feature, layer) => layer.on('click', () => openTender(feature.properties.tender_ref))
+            }).addTo(state.map);
         }
+    } catch (e) { toast('Map route overlays are unavailable: ' + e.message); }
+}
 
-        if (data.features?.length) renderRoutes(box, data.features);
-        if (!data.items.length && !data.features?.length) {
-            box.insertAdjacentHTML('beforeend', '<span class="empty mapempty">No mapped public tenders yet</span>');
+async function searchMapLocation(lat, lng, page = 1) {
+    const title = $('mapResultsTitle');
+    const note = $('mapEmptyNote');
+    state.mapLocation = { lat, lng };
+    state.mapPage = page;
+    title.textContent = `Searching near ${lat.toFixed(5)}, ${lng.toFixed(5)}…`;
+    note.hidden = true;
+    $('mapPages').innerHTML = '';
+    $('mapList').innerHTML = '<div class="empty">Finding registered checkpoints…</div>';
+    if (state.selectedMarker) state.map.removeLayer(state.selectedMarker);
+    state.selectedMarker = window.L.marker([lat, lng]).addTo(state.map).bindPopup('Selected search location').openPopup();
+    try {
+        const params = new URLSearchParams({ lat: String(lat), lng: String(lng), page: String(page), page_size: String(state.pageSize) });
+        const data = await api('/tenders/geo-search?' + params);
+        const first = data.total ? (page - 1) * state.pageSize + 1 : 0;
+        title.textContent = `${first}–${Math.min(page * state.pageSize, data.total)} of ${data.total.toLocaleString('en-IN')} matching tenders`;
+        $('mapPages').innerHTML = data.total > state.pageSize
+            ? `<button class="page-arrow" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>‹ Previous</button><button class="page-arrow" data-page="${page + 1}" ${page * state.pageSize >= data.total ? 'disabled' : ''}>Next ›</button>`
+            : '';
+        $('mapPages').querySelectorAll('button').forEach(button => button.onclick = () => searchMapLocation(lat, lng, Number(button.dataset.page)));
+        if (!data.total) {
+            $('mapList').innerHTML = '';
+            note.hidden = false;
+        } else {
+            renderList(data.items, data.total, false, 'mapList');
         }
     } catch (e) {
-        const empty = $('mapbox').querySelector('.mapempty');
-        if (empty) empty.textContent = 'Map records unavailable';
+        title.textContent = 'Location search could not be completed';
+        $('mapPages').innerHTML = '';
+        $('mapList').innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
     }
 }
 
@@ -251,23 +281,8 @@ export async function findNearby() {
     }
     toast('Waiting for location permission…');
     navigator.geolocation.getCurrentPosition(async pos => {
-        const p = new URLSearchParams({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            radius_km: 25,
-            page: '1',
-            page_size: '100'
-        });
-        try {
-            const data = await api('/tenders/nearby?' + p);
-            state.nearby = true;
-            state.items = data.items;
-            state.total = data.total;
-            renderList(data.items, data.total, false);
-            window.location.hash = '#tenders';
-        } catch (e) {
-            toast('Nearby search failed: ' + e.message);
-        }
+        state.map?.setView([pos.coords.latitude, pos.coords.longitude], 13);
+        searchMapLocation(pos.coords.latitude, pos.coords.longitude);
     }, err => toast(err.code === 1 ? 'Location permission was not granted.' : 'Could not determine your location.'), {
         timeout: 10000,
         maximumAge: 60000

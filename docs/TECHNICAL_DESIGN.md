@@ -192,12 +192,14 @@ Public routes expose published and awarded tenders. Administrators have manageme
 
 ## 7. API boundaries
 
-- **Public reads:** `/api/v1/health`, `/stats`, `/activity`, `/departments`, `/tenders`, `/tenders/{ref}`, `/tenders/map`, `/tenders/nearby`, and tender document routes.
+- **Public reads:** `/api/v1/health`, `/stats`, `/activity`, `/departments`, `/tenders`, `/tenders/{ref}`, `/tenders/map`, `/tenders/nearby`, `/tenders/geo-search`, and tender document routes.
 - **Authentication:** `/api/v1/auth/login`, `/refresh`, `/logout`, and `/me`.
-- **Administration:** `/api/v1/admin/*` for review, tender and award updates, users, department entities, audit records, and CSV import; requires administrator role.
+- **Administration:** `/api/v1/admin/*` for review, tender and award updates, users, department entities, audit records, CSV import, and checkpoint CRUD; requires administrator role.
 - **Department viewer:** `/api/v1/viewer/*` for department-scoped information; requires authentication and uses the user's department scope.
 
 The generated OpenAPI schema at `/docs` is the runtime API reference. Public serialization is centralized in `backend/app/services.py` so tender list/detail responses share their representation.
+
+Map-based discovery uses `geo_checkpoints` with independently configurable radius and a many-to-many `geo_checkpoint_tenders` association. `GET /api/v1/tenders/geo-search` applies a Haversine distance check and returns the same paged public tender representation used by keyword search. Administrator checkpoint changes are audited and reference existing tender records.
 
 ## 8. Files and geospatial flow
 

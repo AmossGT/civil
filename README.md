@@ -100,8 +100,10 @@ The public API is rooted at `/api/v1`; common endpoints include:
 - `GET /health`, `GET /stats`, and `GET /activity`
 - `GET /tenders` with search, department/status filters, pagination, and sorting
 - `GET /tenders/{tender_ref}` and `GET /tenders/{tender_ref}/documents`
-- `GET /tenders/map` and `GET /tenders/nearby`
+- `GET /tenders/map`, `GET /tenders/nearby`, and `GET /tenders/geo-search?lat=...&lng=...` (checkpoint-radius search)
 - `/auth/*`, `/admin/*`, and `/viewer/*` for authentication and role-restricted workflows
+
+Administrators manage map-search checkpoints through `GET/POST /api/v1/admin/geo-checkpoints`, `PUT /api/v1/admin/geo-checkpoints/{id}`, and `DELETE /api/v1/admin/geo-checkpoints/{id}`. Each checkpoint accepts a name, latitude, longitude, radius in metres, and one or more existing `tender_refs`.
 
 Interactive endpoint schemas are available at `/docs` while the API is running.
 
