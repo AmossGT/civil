@@ -12,8 +12,8 @@ from .database import SessionLocal, initialize_database
 from .models import User
 from .prototype_seed import seed_prototype_data
 from .public_routes import public
-from .security import hash_password
 from .spatial_seed import seed_spatial_data
+from .security import hash_password
 from .viewer_routes import viewer
 
 @asynccontextmanager
@@ -23,16 +23,22 @@ async def lifespan(app: FastAPI):
         with SessionLocal() as db:
             seed_prototype_data(db)
             seed_spatial_data(db)
+    # Optional local/test bootstrap only. Leave both settings blank to use the
+    # one-time, email-verified first-admin setup page.
     if settings.bootstrap_admin_email and settings.bootstrap_admin_password:
         with SessionLocal() as db:
             exists = db.query(User).filter(func.lower(User.email) == settings.bootstrap_admin_email.lower()).first()
             if not exists:
+                from .schemas import validate_strong_password
+                validate_strong_password(settings.bootstrap_admin_password)
                 db.add(User(
                     email=settings.bootstrap_admin_email.lower(),
+                    full_name="Bootstrap Administrator",
                     password_hash=hash_password(settings.bootstrap_admin_password),
                     role="admin",
                     is_active=True,
-                    token_version=1
+                    email_verified=True,
+                    token_version=1,
                 ))
                 db.commit()
     yield

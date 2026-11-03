@@ -12,11 +12,11 @@ The service is designed as a single-origin local deployment: FastAPI serves both
 
 | Area | Current implementation |
 |---|---|
-| Browser UI | Static HTML, CSS, and vanilla JavaScript ES modules under `public/` |
+| Browser UI | React public portal built to `public/`, with administrator and department workspaces under `public/` |
 | API | Python 3.12, FastAPI, Pydantic settings, SQLAlchemy ORM |
 | Database | PostgreSQL 16 with PostGIS 3.4 |
 | Geospatial data | PostGIS geography/geometry and GeoJSON responses |
-| Authentication | Signed short-lived access tokens, refresh tokens, HttpOnly cookie support, password hashing, role checks |
+| Authentication | Signed access tokens, refresh tokens, HttpOnly cookie support, Argon2 password hashing, email-OTP first-admin setup, rate limits, and role checks |
 | Documents | Files under the upload directory, metadata and tender relation in PostgreSQL |
 | Local runtime | Docker Compose; backend and public UI are bind-mounted for reload |
 
@@ -199,7 +199,7 @@ Public routes expose published and awarded tenders. Administrators have manageme
 ## 7. API boundaries
 
 - **Public reads:** `/api/v1/health`, `/stats`, `/activity`, `/departments`, `/tenders`, `/tenders/{ref}`, `/tenders/map`, `/tenders/nearby`, `/tenders/geo-search`, and tender document routes.
-- **Authentication:** `/api/v1/auth/login`, `/refresh`, `/logout`, and `/me`.
+- **Authentication:** `/api/v1/auth/admin/login` for administrator sign-in; `/api/v1/auth/admin-setup/*` for one-time verified first-admin creation; `/api/v1/auth/login` remains available for legacy staff login; `/refresh`, `/logout`, and `/me` manage sessions.
 - **Administration:** `/api/v1/admin/*` for review, tender and award updates, users, department entities, audit records, CSV import, and checkpoint CRUD; requires administrator role.
 - **Department viewer:** `/api/v1/viewer/*` for department-scoped information; requires authentication and uses the user's department scope.
 

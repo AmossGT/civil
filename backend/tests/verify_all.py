@@ -46,7 +46,7 @@ def run_tests():
     # 2. Admin Login
     admin_creds = {
         "email": "admin@example.gov.in",
-        "password": "change-this-local-password"
+        "password": "RoadSathi-Test-Admin1!"
     }
     status, auth_data = req("/auth/login", method="POST", body=admin_creds)
     assert status in (200, 201), f"Admin login failed: {status}, {auth_data}"

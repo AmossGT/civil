@@ -44,11 +44,26 @@ class User(Base):
     __tablename__="users"
     id: Mapped[int]=mapped_column(primary_key=True)
     email: Mapped[str]=mapped_column(String(254),unique=True,index=True)
+    full_name: Mapped[str|None]=mapped_column(String(160),nullable=True)
+    phone: Mapped[str|None]=mapped_column(String(40),nullable=True)
     password_hash: Mapped[str]=mapped_column(String(300))
     role: Mapped[str]=mapped_column(String(30))  # "admin" or "department_viewer"
     department_id: Mapped[int|None]=mapped_column(ForeignKey("departments.id",ondelete="SET NULL"))
     token_version: Mapped[int]=mapped_column(Integer,default=1)
     is_active: Mapped[bool]=mapped_column(Boolean,default=True)
+    email_verified: Mapped[bool]=mapped_column(Boolean,default=True)
+
+class PendingAdminSetup(Base):
+    __tablename__ = "pending_admin_setups"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(160))
+    phone: Mapped[str|None] = mapped_column(String(40), nullable=True)
+    password_hash: Mapped[str] = mapped_column(String(300))
+    otp_hash: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    failed_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 class TenderType(Base):
     __tablename__ = "tender_types"

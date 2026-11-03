@@ -17,7 +17,7 @@ Road Sathi is a public procurement transparency portal for tender, contractor, a
    Copy-Item .env.example .env
    ```
 
-3. Edit `.env`. Replace `POSTGRES_PASSWORD`, `SECRET_KEY`, `BOOTSTRAP_ADMIN_PASSWORD`, and (if desired) `BOOTSTRAP_ADMIN_EMAIL`. Keep `.env` local; it is ignored by Git.
+3. Edit `.env`. Replace `POSTGRES_PASSWORD` and `SECRET_KEY`. Leave the optional bootstrap administrator values blank to use the one-time verified setup page. Keep `.env` local; it is ignored by Git.
 4. Start the application:
 
    ```powershell
@@ -29,7 +29,7 @@ Road Sathi is a public procurement transparency portal for tender, contractor, a
    - FastAPI/OpenAPI docs: <http://localhost:8000/docs>
    - PostgreSQL: `localhost:5432`, using `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`
 
-The API startup enables PostGIS, creates missing tables, optionally seeds prototype data, and creates the bootstrap administrator if the configured email does not already exist. The API and `public/` folders are mounted for local reload while developing.
+The API startup enables PostGIS, creates missing tables, and optionally seeds prototype data. With no bootstrap administrator configured, use **Staff Sign In** and complete the first-admin email verification setup; the setup automatically closes once an admin account exists. The API and `public/` folders are mounted for local reload while developing.
 
 ## Environment variables
 
@@ -45,8 +45,12 @@ Compose reads `.env` for interpolation. These values are passed to the API or da
 | `ALLOWED_ORIGINS` | `http://localhost:8000,http://localhost:5173` | Comma-separated CORS origins. Use only the deployed portal origins in production. |
 | `COOKIE_SECURE` | `false` | Sets the `Secure` flag on authentication cookies. Enable with HTTPS in production. |
 | `MAX_UPLOAD_BYTES` | `15728640` | Maximum accepted upload size in bytes (15 MiB by default). |
-| `BOOTSTRAP_ADMIN_EMAIL` | `admin@example.gov.in` | Email used to create the first administrator when that account is absent. |
-| `BOOTSTRAP_ADMIN_PASSWORD` | `change-this-local-password` | Password for the bootstrap administrator. Replace before use; changing this value does not reset an already-created account. |
+| `SMTP_HOST` | blank | SMTP server used to deliver the first-admin verification code. Required only when no admin exists. |
+| `SMTP_PORT` | `587` | SMTP port; use `465` for implicit TLS. |
+| `SMTP_USERNAME` / `SMTP_PASSWORD` | blank | Optional SMTP authentication credentials. Keep the password in the local `.env`, never in source control. |
+| `SMTP_FROM_EMAIL` | blank | Sender address for first-admin verification messages. Required only when no admin exists. |
+| `SMTP_USE_TLS` | `true` | Use TLS for SMTP delivery. |
+| `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` | blank | Optional local/test-only bootstrap. If both are set, startup creates this administrator and the one-time setup page is closed. Leave blank for normal first-admin setup. |
 | `LOAD_PROTOTYPE_DATA` | `true` | Enables idempotent import of the supplied prototype records and map data at API startup. `false` disables future seed imports but does not delete imported rows. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | Access-token lifetime. |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | `7` | Refresh-token lifetime. |
@@ -76,13 +80,13 @@ Do not run `docker compose down -v` unless you intend to remove the local databa
 
 The repository contains the sample records described above and an API integration verification script at [`backend/tests/verify_all.py`](backend/tests/verify_all.py). It checks health/authentication and token refresh, admin tender operations, department-viewer access restrictions, public visibility, map responses, CSV import behavior, tender identifiers for the seven supplied packages, and logout revocation.
 
-The script uses fixed local test credentials (`admin@example.gov.in` / `change-this-local-password`) and writes test users and tender rows. Run it only against a disposable local database configured with those credentials, never against production or a database containing records you need to keep:
+The script uses fixed local test credentials (`admin@example.gov.in` / `RoadSathi-Test-Admin1!`) and writes test users and tender rows. Run it only against a disposable local database configured with those credentials, never against production or a database containing records you need to keep:
 
 ```powershell
 # Stop the normal stack first so the test stack can use ports 8000 and 5432.
 docker compose down
 Copy-Item .env.example .env.test
-# Keep the bootstrap admin values in .env.test at the test credentials listed above.
+Add-Content .env.test "`nBOOTSTRAP_ADMIN_EMAIL=admin@example.gov.in`nBOOTSTRAP_ADMIN_PASSWORD=RoadSathi-Test-Admin1!"
 docker compose --env-file .env.test -p roadsathi-test up -d --build
 docker compose --env-file .env.test -p roadsathi-test exec api python backend/tests/verify_all.py
 docker compose --env-file .env.test -p roadsathi-test down -v

@@ -6,8 +6,11 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import get_db
 from .models import RefreshToken, User
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerifyMismatchError
 
 COOKIE_NAME = "opentender_session"
+_password_hasher = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=2, hash_len=32, salt_len=16)
 
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
 
@@ -20,18 +23,21 @@ def rate_limit(key: str, max_requests: int = 5, window_seconds: int = 60):
     _rate_buckets[key].append(now)
 
 def hash_password(password: str) -> str:
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 310000)
-    return "pbkdf2_sha256$310000$" + base64.urlsafe_b64encode(salt).decode() + "$" + base64.urlsafe_b64encode(digest).decode()
+    return _password_hasher.hash(password)
 
 def verify_password(password: str, stored: str) -> bool:
     try:
+        if stored.startswith("$argon2"):
+            return _password_hasher.verify(stored, password)
         algorithm, rounds, salt64, digest64 = stored.split("$")
         if algorithm != "pbkdf2_sha256": return False
         actual = hashlib.pbkdf2_hmac("sha256", password.encode(), base64.urlsafe_b64decode(salt64), int(rounds))
         return hmac.compare_digest(actual, base64.urlsafe_b64decode(digest64))
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, InvalidHashError, VerifyMismatchError):
         return False
+
+def password_needs_rehash(stored: str) -> bool:
+    return not stored.startswith("$argon2")
 
 def create_access_token(user: User) -> str:
     now = int(time.time())

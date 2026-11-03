@@ -4,7 +4,7 @@ import { sortTenderRecords } from './tenderSorting.js'
 import './road.css'
 
 const pages = ['Overview', 'Tenders', 'Map View', 'About']
-const pageIds = { Overview: 'overview', Tenders: 'tenders', 'Map View': 'map', About: 'about' }
+const pageIds = { Overview: 'overview', Tenders: 'tenders', 'Map View': 'map', About: 'about', 'Staff Sign In': 'staff-sign-in' }
 
 function Icon({ name, size = 18 }) {
   const paths = {
@@ -29,7 +29,7 @@ function Header({ page, navigate }) {
     <a href="#overview" className="brand" onClick={e => { e.preventDefault(); navigate('Overview') }} aria-label="RoadSathi home"><span className="brand-mark" aria-hidden="true"><span /></span><span className="brand-name">Road<span>Sathi</span><small>MANIPUR · PUBLIC WORKS</small></span></a>
     <button className="menu-toggle" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'close' : 'menu'} /></button>
     <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">{pages.map(item => <a key={item} href={`#${pageIds[item]}`} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={e => { e.preventDefault(); navigate(item); setMenuOpen(false) }}>{item}</a>)}</nav>
-    <a className="staff-link" href={import.meta.env.VITE_STAFF_SIGN_IN_URL || 'http://localhost:8000/'}><span className="staff-dot" /> Staff Sign In <Icon name="external" size={14} /></a>
+    <a className="staff-link" href="#staff-sign-in" onClick={event => { event.preventDefault(); navigate(page === 'Staff Sign In' ? 'Overview' : 'Staff Sign In') }}><span className="staff-dot" /> {page === 'Staff Sign In' ? 'Public Portal' : 'Staff Sign In'} <Icon name="external" size={14} /></a>
   </div></header>
 }
 
@@ -409,8 +409,86 @@ function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled }) {
   </main>
 }
 
+function StaffAccess() {
+  const [setup, setSetup] = useState(null)
+  const [loadingStatus, setLoadingStatus] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [verifyStep, setVerifyStep] = useState(false)
+  const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', confirm_password: '', code: '' })
+
+  useEffect(() => {
+    let active = true
+    api('/auth/admin-setup/status').then(value => { if (active) setSetup(value) }).catch(err => { if (active) setError(err.message) }).finally(() => { if (active) setLoadingStatus(false) })
+    return () => { active = false }
+  }, [])
+
+  const update = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }))
+  const finishSession = data => {
+    sessionStorage.setItem('opentender_jwt', data.access_token)
+    if (data.refresh_token) sessionStorage.setItem('opentender_refresh_token', data.refresh_token)
+    window.location.assign('/admin/v1/')
+  }
+  const submitLogin = async event => {
+    event.preventDefault(); setError(''); setMessage(''); setBusy(true)
+    try {
+      finishSession(await api('/auth/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.email, password: form.password }) }))
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+  const submitSetup = async event => {
+    event.preventDefault(); setError(''); setMessage('')
+    if (form.password !== form.confirm_password) { setError('Passwords do not match.'); return }
+    if (form.password.length < 8 || !/[A-Z]/.test(form.password) || !/[a-z]/.test(form.password) || !/[0-9]/.test(form.password) || !/[^A-Za-z0-9]/.test(form.password)) { setError('Password must be at least 8 characters and include uppercase, lowercase, number, and symbol characters.'); return }
+    setBusy(true)
+    try {
+      const result = await api('/auth/admin-setup/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: form.full_name, email: form.email, phone: form.phone || null, password: form.password }) })
+      setVerifyStep(true); setMessage(result.message)
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+  const verifySetup = async event => {
+    event.preventDefault(); setError(''); setBusy(true)
+    try {
+      finishSession(await api('/auth/admin-setup/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: form.email, code: form.code }) }))
+    } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
+
+  return <main className="staff-access-page"><section className="staff-access-card" aria-labelledby="staff-access-title">
+    <div className="eyebrow"><span /> SECURE ADMINISTRATOR ACCESS</div>
+    <h1 id="staff-access-title">{setup?.setup_available ? (verifyStep ? 'Verify your email' : 'Set up the first admin') : 'Administrator sign in'}</h1>
+    <p className="staff-access-intro">{setup?.setup_available ? (verifyStep ? `Enter the six-digit code sent to ${form.email}.` : 'Create the first administrator account for the RoadSathi website.') : 'Sign in to review and manage the public transparency portal.'}</p>
+    {loadingStatus && <p role="status">Checking administrator setup…</p>}
+    {!loadingStatus && setup?.setup_available && !setup.email_delivery_ready && <div className="staff-message" role="status">First-admin setup is available, but email verification is not configured. An administrator must configure SMTP_HOST and SMTP_FROM_EMAIL in the server environment before setup can continue.</div>}
+    {message && <div className="staff-message" role="status">{message}</div>}
+    {error && <div className="staff-error" role="alert">{error}</div>}
+
+    {!loadingStatus && !setup?.setup_available && <form className="staff-form" onSubmit={submitLogin}>
+      <label>Email<input name="email" type="email" autoComplete="username" required value={form.email} onChange={update} /></label>
+      <label>Password<span className="staff-password-input"><input name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={form.password} onChange={update} /><button type="button" className="staff-toggle-password" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button></span></label>
+      <button className="button button-primary staff-submit" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in to admin console'}</button>
+    </form>}
+
+    {!loadingStatus && setup?.setup_available && !verifyStep && setup.email_delivery_ready && <form className="staff-form" onSubmit={submitSetup}>
+      <label>Full name<input name="full_name" type="text" autoComplete="name" minLength="2" maxLength="160" required value={form.full_name} onChange={update} /></label>
+      <label>Email (username)<input name="email" type="email" autoComplete="email" required value={form.email} onChange={update} /></label>
+      <label>Phone number <span className="staff-optional">Optional, for future OTP use</span><input name="phone" type="tel" autoComplete="tel" maxLength="40" value={form.phone} onChange={update} /></label>
+      <label>Password<span className="staff-password-input"><input name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength="8" required value={form.password} onChange={update} /><button type="button" className="staff-toggle-password" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? 'Hide' : 'Show'}</button></span></label>
+      <small className="staff-password-help">At least 8 characters with uppercase, lowercase, a number, and a symbol.</small>
+      <label>Confirm password<input name="confirm_password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength="8" required value={form.confirm_password} onChange={update} /></label>
+      <button className="button button-primary staff-submit" type="submit" disabled={busy}>{busy ? 'Sending verification code…' : 'Email me a verification code'}</button>
+    </form>}
+
+    {!loadingStatus && setup?.setup_available && verifyStep && <form className="staff-form" onSubmit={verifySetup}>
+      <label>Six-digit email verification code<input name="code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength="6" required value={form.code} onChange={update} /></label>
+      <button className="button button-primary staff-submit" type="submit" disabled={busy}>{busy ? 'Verifying…' : 'Verify email and create admin'}</button>
+    </form>}
+    <p className="staff-access-foot">Administrator access is restricted to authorised website managers.</p>
+  </section></main>
+}
+
 function App() {
-  const [page, setPage] = useState(() => pages.find(p => pageIds[p] === window.location.hash.slice(1)) || 'Overview')
+  const [page, setPage] = useState(() => window.location.hash.slice(1) === 'staff-sign-in' ? 'Staff Sign In' : (pages.find(p => pageIds[p] === window.location.hash.slice(1)) || 'Overview'))
   const [tenders, setTenders] = useState([])
   const [departments, setDepartments] = useState([])
   const [stats, setStats] = useState(null)
@@ -430,7 +508,7 @@ function App() {
     navigate('Map View')
   }, [navigate])
   const handleMapTargetHandled = useCallback(request => setMapTarget(current => current?.request === request ? null : current), [])
-  useEffect(() => { const handle = () => setPage(pages.find(p => pageIds[p] === window.location.hash.slice(1)) || 'Overview'); window.addEventListener('hashchange', handle); window.addEventListener('popstate', handle); return () => { window.removeEventListener('hashchange', handle); window.removeEventListener('popstate', handle) } }, [])
+  useEffect(() => { const handle = () => setPage(window.location.hash.slice(1) === 'staff-sign-in' ? 'Staff Sign In' : (pages.find(p => pageIds[p] === window.location.hash.slice(1)) || 'Overview')); window.addEventListener('hashchange', handle); window.addEventListener('popstate', handle); return () => { window.removeEventListener('hashchange', handle); window.removeEventListener('popstate', handle) } }, [])
   useEffect(() => {
     let active = true
     const timer = window.setTimeout(async () => {
@@ -471,6 +549,7 @@ function App() {
   const tenderProps = { items: tenders, onDetails: openDetails, onShowOnMap: showTenderOnMap, loading, error, onRetry: () => setRefreshKey(key => key + 1) }
   const sortedTenders = useMemo(() => sortTenderRecords(tenders, filters.sort), [tenders, filters.sort])
   return <div className="app-shell"><Header page={page} navigate={navigate} />
+    {page === 'Staff Sign In' && <StaffAccess />}
     {page === 'Overview' && <main><section className="hero-section"><div className="hero-image" role="img" aria-label="Road through Manipur" /><div className="hero-shade" /><div className="hero-content"><div className="hero-copy"><Eyebrow>MANIPUR · PUBLIC INFRASTRUCTURE</Eyebrow><h1>Public infrastructure.<br /><span>Public knowledge.</span></h1><p>RoadSathi brings road project and tender information into one clear, accessible place for every citizen.</p><div className="hero-actions"><button className="button button-light" onClick={() => navigate('Tenders')}>Explore tenders <Icon name="arrow" size={16} /></button><button className="button button-ghost-light" onClick={() => navigate('Map View')}><Icon name="pin" size={16} /> View on map</button></div></div><div className="hero-caption">INDO-MYANMAR ROAD · MANIPUR <a href="https://commons.wikimedia.org/wiki/File:Indo-Myanmar_Road,_Asian_Highway_No.1.jpg" target="_blank" rel="noreferrer">Photo: Premdatta Laitonjam / CC BY-SA 4.0</a></div></div></section>
       <div className="page-shell overview-content"><section className="stats-strip" aria-label="RoadSathi summary statistics"><Stat label="Published tenders" value={stats ? Number(stats.published_tenders || 0).toLocaleString('en-IN') : '—'} /><Stat label="Awards disclosed" value={stats ? Number(stats.awards_disclosed || 0).toLocaleString('en-IN') : '—'} /><Stat label="Total awarded contract value" value={stats ? formatCurrency(awardedSum) : '—'} note="As disclosed in public records" /><Stat label="Departments" value={stats ? Number(stats.departments || 0).toLocaleString('en-IN') : '—'} /></section>
         <div className="overview-grid"><section className="activity-section"><div className="section-title-row"><div><Eyebrow>RECENT UPDATES</Eyebrow><h2>Latest tender activity</h2></div><button className="text-button" onClick={() => navigate('Tenders')}>All tenders <Icon name="arrow" size={15} /></button></div>{activity.length ? <div className="activity-list">{activity.map((item, i) => <div className="activity-item" key={`${item.tender_ref}-${i}`}><span className={`activity-icon ${item.status === 'awarded' ? 'activity-award' : ''}`}><Icon name={item.status === 'awarded' ? 'check' : 'clock'} size={16} /></span><div className="activity-copy"><strong>{item.event}</strong><span>{item.title}</span><small>{item.department} · {formatDate(item.created_at)}</small></div><span className={`status-pill ${statusClass(item.status)}`}><i />{formatStatus(item.status)}</span></div>)}</div> : <div className="subtle-empty">Activity will appear here when public records are available.</div>}</section>

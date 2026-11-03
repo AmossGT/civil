@@ -416,10 +416,12 @@ def add_contact(contractor_id: int, body: schemas.ContactCreate, db: Session = D
 @admin.get("/users")
 def list_users(db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
     rows = db.query(models.User).order_by(models.User.id).all()
-    return [{"id": u.id, "email": u.email, "role": u.role, "department_id": u.department_id, "is_active": u.is_active} for u in rows]
+    return [{"id": u.id, "email": u.email, "full_name": u.full_name, "phone": u.phone, "role": u.role, "department_id": u.department_id, "is_active": u.is_active} for u in rows]
 
 @admin.post("/users", status_code=201)
 def create_user(body: schemas.UserCreate, db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
+    if body.role == "admin":
+        schemas.validate_strong_password(body.password)
     if body.role == "department_viewer" and (not body.department_id or not db.get(models.Department, body.department_id)):
         raise HTTPException(422, "Department viewer account requires a valid department")
     if body.role == "admin" and body.department_id is not None:
@@ -427,17 +429,20 @@ def create_user(body: schemas.UserCreate, db: Session = Depends(get_db), user: m
 
     u = models.User(
         email=body.email.lower(),
+        full_name=body.full_name,
+        phone=body.phone,
         password_hash=hash_password(body.password),
         role=body.role,
         department_id=body.department_id,
         is_active=True,
+        email_verified=True,
         token_version=1
     )
     db.add(u)
     db.flush()
     services.audit(db, user.id, "create", "users", u.id, None, {"email": u.email, "role": u.role, "department_id": u.department_id})
     commit(db)
-    return {"id": u.id, "email": u.email, "role": u.role, "department_id": u.department_id, "is_active": u.is_active}
+    return {"id": u.id, "email": u.email, "full_name": u.full_name, "phone": u.phone, "role": u.role, "department_id": u.department_id, "is_active": u.is_active}
 
 @admin.patch("/users/{user_id}")
 def update_user(user_id: int, body: schemas.UserPatch, db: Session = Depends(get_db), user: models.User = Depends(require_roles("admin"))):
@@ -462,6 +467,8 @@ def update_user(user_id: int, body: schemas.UserPatch, db: Session = Depends(get
         target.is_active = body.is_active
 
     if body.password:
+        if target.role == "admin":
+            schemas.validate_strong_password(body.password)
         target.password_hash = hash_password(body.password)
         target.token_version += 1  # revoke existing tokens on password reset
 

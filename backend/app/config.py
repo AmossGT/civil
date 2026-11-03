@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 15 * 1024 * 1024
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
+    bootstrap_admin_email: str | None = None
+    bootstrap_admin_password: str | None = None
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
     load_prototype_data: bool = False
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7

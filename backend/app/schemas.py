@@ -1,5 +1,10 @@
 from datetime import date
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+def validate_strong_password(value: str) -> str:
+    if len(value) < 8 or not any(c.isupper() for c in value) or not any(c.islower() for c in value) or not any(c.isdigit() for c in value) or not any(not c.isalnum() for c in value):
+        raise ValueError("Password must be at least 8 characters and include uppercase, lowercase, number, and symbol characters")
+    return value
 
 class ContactOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -51,6 +56,21 @@ class LoginIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=256)
 
+class AdminSetupStart(BaseModel):
+    full_name: str = Field(min_length=2, max_length=160)
+    email: EmailStr
+    phone: str | None = Field(default=None, max_length=40)
+    password: str = Field(min_length=8, max_length=256)
+
+    @field_validator("password")
+    @classmethod
+    def strong_password(cls, value: str) -> str:
+        return validate_strong_password(value)
+
+class AdminSetupVerify(BaseModel):
+    email: EmailStr
+    code: str = Field(pattern=r"^\d{6}$")
+
 class TokenOut(BaseModel):
     access_token: str
     refresh_token: str
@@ -62,6 +82,9 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=8, max_length=256)
     role: str = Field(pattern="^(admin|department_viewer)$")
     department_id: int | None = None
+    full_name: str | None = Field(default=None, max_length=160)
+    phone: str | None = Field(default=None, max_length=40)
+
 
 class UserOut(BaseModel):
     id: int
@@ -75,6 +98,7 @@ class UserPatch(BaseModel):
     department_id: int | None = None
     is_active: bool | None = None
     password: str | None = Field(default=None, min_length=8, max_length=256)
+
 
 class DepartmentCreate(BaseModel):
     name: str = Field(min_length=2, max_length=160)
