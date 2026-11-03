@@ -41,7 +41,7 @@ function TenderRow({ tender, onDetails, onShowOnMap }) {
   const department = tender.department?.name?.replace(/\s*-\s*ADB Tenders\s*\/\s*Project Implementation Unit/i, '') || 'Department not listed'
   const identifier = tender.identifiers?.tender_id || tender.tender_ref
   const disbursed = tender.amount_disbursed ?? tender.extra_data?.amount_disbursed
-  return <article className="tender-row"><div className="project-cell"><span className="project-dept">{department}</span><h3>{tender.title}</h3><span className="project-ref">Tender ID: {identifier}</span></div><div className="tender-cell" data-label="Department">{department}</div><div className="tender-cell mono" data-label="Tender ID">{identifier}</div><div className="tender-cell amount-cell" data-label="Contract amount (AOC)">{aoc != null ? formatCurrency(aoc) : 'Not disclosed'}</div><div className="tender-cell amount-cell" data-label="Amount disbursed">{disbursed != null ? formatCurrency(disbursed) : 'Not disclosed'}</div><div className="tender-cell" data-label="Project status"><span className={`status-pill ${statusClass(tender.status)}`}><i />{formatStatus(tender.status)}</span></div><div className="tender-action"><button className="button button-outline button-small" onClick={() => onDetails(tender)} aria-label={`View details for ${tender.tender_ref}`}>View Details</button><button className="button button-primary button-small" onClick={() => onShowOnMap(tender)} aria-label={`Show ${tender.title} on map`}>Show on Map</button></div></article>
+  return <article className="tender-row"><div className="project-cell"><span className="project-dept">{department}</span><h3>{tender.title}</h3><span className="project-ref">Tender ID: {identifier} · Type: {tender.type || 'Road'}</span></div><div className="tender-cell" data-label="Department">{department}</div><div className="tender-cell mono" data-label="Tender ID">{identifier}</div><div className="tender-cell amount-cell" data-label="Contract amount (AOC)">{aoc != null ? formatCurrency(aoc) : 'Not disclosed'}</div><div className="tender-cell amount-cell" data-label="Amount disbursed">{disbursed != null ? formatCurrency(disbursed) : <><span>Not disclosed</span><a className="rti-link" href="https://rtimanipur.mn.gov.in/" target="_blank" rel="noopener noreferrer">File an RTI on the MANIPUR RTI portal</a></>}</div><div className="tender-cell" data-label="Project status"><span className={`status-pill ${statusClass(tender.status)}`}><i />{formatStatus(tender.status)}</span></div><div className="tender-action"><button className="button button-outline button-small" onClick={() => onDetails(tender)} aria-label={`View details for ${tender.tender_ref}`}>View Details</button><button className="button button-primary button-small" onClick={() => onShowOnMap(tender)} aria-label={`Show ${tender.title} on map`}>Show on Map</button></div></article>
 }
 
 function TenderTable({ items, onDetails, onShowOnMap, loading, error, onRetry }) {
@@ -83,6 +83,7 @@ function routeAttributes(properties = {}) {
 function TenderInformation({ tender }) {
   const extra = tender.extra_data || {}
   const contractor = tender.award?.contractor
+  const amountDisbursed = tender.amount_disbursed ?? extra.amount_disbursed
   const emails = [...(extra.contractor_emails || []), ...(extra.contractor_email ? [extra.contractor_email] : [])]
   const grievance = extra.grievance_contact || extra.project_office_contact
   const location = [
@@ -102,11 +103,12 @@ function TenderInformation({ tender }) {
       <Detail label="AOC date" value={formatDate(tender.award?.aoc_date)} />
       <Detail label="Contract date" value={formatDate(extra.contract_date)} />
       <Detail label="Completion period" value={extra.work_completion_days ? `${Number(extra.work_completion_days).toLocaleString('en-IN')} days` : 'Not provided'} />
-      <Detail label="Amount disbursed" value={tender.amount_disbursed == null ? 'Not disclosed' : formatCurrency(tender.amount_disbursed)} />
+      <div className="detail-item"><span>Amount disbursed</span><strong>{amountDisbursed == null ? 'Not disclosed' : formatCurrency(amountDisbursed)}</strong>{amountDisbursed == null && <a className="rti-link" href="https://rtimanipur.mn.gov.in/" target="_blank" rel="noopener noreferrer">File an RTI on the MANIPUR RTI portal</a>}</div>
     </div></DetailSection>
 
     <DetailSection title="Tender identification"><div className="detail-grid">
       <Detail label="Tender ID" value={tender.identifiers?.tender_id || tender.tender_ref} />
+      <Detail label="Type" value={tender.type || 'Not specified'} />
       <Detail label="Reference number" value={tender.identifiers?.reference_number || 'Tender ID and reference number not provided'} />
     </div></DetailSection>
 

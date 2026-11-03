@@ -33,7 +33,8 @@ def detail_query(db: Session):
         joinedload(models.Tender.department).joinedload(models.Department.officers),
         joinedload(models.Tender.award).joinedload(models.Award.contractor).joinedload(models.Contractor.contacts),
         joinedload(models.Tender.documents),
-        joinedload(models.Tender.procurement_identifier)
+        joinedload(models.Tender.procurement_identifier),
+        joinedload(models.Tender.tender_type)
     )
 
 def scoped_tenders(db: Session, user: models.User | None):
@@ -76,6 +77,7 @@ def public_tender(t: models.Tender, db: Session, user: models.User | None = None
         "title": t.title,
         "description": t.description,
         "identifiers": ({"tender_id": t.procurement_identifier.tender_identifier, "reference_number": t.procurement_identifier.reference_number} if t.procurement_identifier else None),
+        "type": t.tender_type.name if t.tender_type else None,
         "extra_data": t.extra_data,
         "prototype_data": prototype_data,
         "status": t.status,

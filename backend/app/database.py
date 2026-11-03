@@ -17,3 +17,5 @@ def initialize_database():
         conn.execute(text("ALTER TABLE tenders ALTER COLUMN estimated_value DROP NOT NULL"))
         conn.execute(text("ALTER TABLE awards ALTER COLUMN aoc_date DROP NOT NULL"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1"))
+        conn.execute(text("ALTER TABLE tenders ADD COLUMN IF NOT EXISTS tender_type_id INTEGER REFERENCES tender_types(id) ON DELETE SET NULL"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_tenders_tender_type_id ON tenders (tender_type_id)"))

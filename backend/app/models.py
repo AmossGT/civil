@@ -50,6 +50,12 @@ class User(Base):
     token_version: Mapped[int]=mapped_column(Integer,default=1)
     is_active: Mapped[bool]=mapped_column(Boolean,default=True)
 
+class TenderType(Base):
+    __tablename__ = "tender_types"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    tenders: Mapped[list["Tender"]] = relationship(back_populates="tender_type")
+
 class RefreshToken(Base):
     __tablename__="refresh_tokens"
     id: Mapped[int]=mapped_column(primary_key=True)
@@ -65,6 +71,7 @@ class Tender(Base):
     id: Mapped[int]=mapped_column(primary_key=True)
     tender_ref: Mapped[str]=mapped_column(String(100),unique=True,index=True)
     department_id: Mapped[int]=mapped_column(ForeignKey("departments.id"),index=True)
+    tender_type_id: Mapped[int|None]=mapped_column(ForeignKey("tender_types.id",ondelete="SET NULL"),nullable=True,index=True)
     title: Mapped[str]=mapped_column(String(400),index=True)
     description: Mapped[str|None]=mapped_column(Text)
     extra_data: Mapped[dict]=mapped_column(JSON,default=dict)
@@ -82,6 +89,7 @@ class Tender(Base):
     created_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow)
     updated_at: Mapped[datetime]=mapped_column(DateTime(timezone=True),default=utcnow,onupdate=utcnow)
     department: Mapped[Department]=relationship(back_populates="tenders")
+    tender_type: Mapped[TenderType|None]=relationship(back_populates="tenders")
     award: Mapped['Award|None']=relationship(back_populates="tender",uselist=False,cascade="all, delete-orphan")
     documents: Mapped[list['TenderDocument']]=relationship(back_populates="tender",cascade="all, delete-orphan")
     procurement_identifier: Mapped['TenderIdentifier|None']=relationship(back_populates="tender",uselist=False,cascade="all, delete-orphan")

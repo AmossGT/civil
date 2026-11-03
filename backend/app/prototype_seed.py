@@ -25,6 +25,12 @@ def seed_prototype_data(db: Session) -> int:
 
     imported = 0
     for record in data["tenders"]:
+        type_name = record.get("type") or "Road"
+        tender_type = db.query(models.TenderType).filter_by(name=type_name).first()
+        if tender_type is None:
+            tender_type = models.TenderType(name=type_name)
+            db.add(tender_type)
+            db.flush()
         tender = db.query(models.Tender).filter_by(tender_ref=record["tender_ref"]).first()
         if tender is None:
             contractor = db.query(models.Contractor).filter_by(company_name=record["contractor"]).first()
@@ -34,7 +40,7 @@ def seed_prototype_data(db: Session) -> int:
                 db.flush()
 
         extra = {key: value for key, value in record.items() if key not in {
-            "tender_ref", "title", "description", "awarded_value", "contractor", "documents", "tender_id", "tender_reference_number"
+            "tender_ref", "title", "description", "awarded_value", "contractor", "documents", "tender_id", "tender_reference_number", "type"
         }}
         contact = record.get("grievance_contact") or record.get("project_office_contact")
         if contact:
@@ -51,6 +57,7 @@ def seed_prototype_data(db: Session) -> int:
             tender = models.Tender(
                 tender_ref=record["tender_ref"],
                 department_id=department.id,
+                tender_type_id=tender_type.id,
                 title=record["title"],
                 description=record["description"],
                 extra_data=extra,
@@ -68,6 +75,8 @@ def seed_prototype_data(db: Session) -> int:
                 status="pending_review",
             ))
             imported += 1
+        else:
+            tender.tender_type_id = tender_type.id
 
         external_id = record.get("tender_id")
         reference_number = record.get("tender_reference_number")

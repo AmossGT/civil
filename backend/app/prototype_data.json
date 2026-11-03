@@ -8,6 +8,7 @@
   "tenders": [
     {
       "tender_ref": "2024_ADBPW_2403_4",
+      "type": "Road",
       "title": "Murdamip Package 4 - Highway South Division",
       "description": "Construction of rigid pavement and lined drain of selected roads under Highway South Division - Package 4. Total road length: 111.182 km.",
       "awarded_value": 5319000000,
@@ -35,6 +36,7 @@
     },
     {
       "tender_ref": "2024_ADBPW_2403_3",
+      "type": "Road",
       "title": "Murdamip Package 3 - Imphal East Division (ED-2)",
       "description": "Construction of rigid pavement and lined drain of selected roads under Imphal East Division (ED-2) - Package 3. Total road length: 122.209 km.",
       "awarded_value": 6312000000,
@@ -62,6 +64,7 @@
     },
     {
       "tender_ref": "2024_ADBPW_2403_2",
+      "type": "Road",
       "title": "Murdamip Package 2 - Imphal East Division (ED-1)",
       "description": "Construction of rigid pavement and lined drain of selected roads under Imphal East Division (ED-1) - Package 2. Total road length: 141.032 km.",
       "awarded_value": 7725000000,
@@ -89,6 +92,7 @@
     },
     {
       "tender_ref": "2024_ADBPW_2403_1",
+      "type": "Road",
       "title": "Murdamip Package 1 - Imphal West Division",
       "description": "Construction of rigid pavement and lined drain of selected roads under Imphal West Division - Package 1. Total road length: 172.858 km.",
       "awarded_value": 9474500000,
@@ -119,6 +123,7 @@
     },
     {
       "tender_ref": "2023_ADBPW_2136_3",
+      "type": "Road",
       "title": "Imphal Ring Road Package 3 - Km 43.100 to Km 54.155 and spur to FCI",
       "description": "Construction of Imphal Ring Road - Package 3, Km 43.100 to Km 54.155 and spur to FCI. Total length: 12.135 km.",
       "awarded_value": 3440070848,
@@ -158,6 +163,7 @@
     },
     {
       "tender_ref": "2023_ADBPW_2136_2",
+      "type": "Road",
       "title": "Imphal Ring Road Package 2 - Km 17.900 to Km 25.980, Km 32.125 to Km 43.100, and spur to RIMS",
       "description": "Construction of Imphal Ring Road - Package 2, Km 17.900 to Km 25.980, Km 32.125 to Km 43.100, and spur to RIMS. Total length: 19.870 km.",
       "awarded_value": 4971107294,
@@ -197,6 +203,7 @@
     },
     {
       "tender_ref": "2023_ADBPW_2136_1",
+      "type": "Road",
       "title": "Imphal Ring Road Package 1 - Km 0.000 to Km 14.715, Km 14.960 to Km 17.900, and spur to DDK",
       "description": "Construction of Imphal Ring Road - Package 1, Km 0.000 to Km 14.715, Km 14.960 to Km 17.900, and spur to DDK. Total length: 19.225 km.",
       "awarded_value": 3402000000,

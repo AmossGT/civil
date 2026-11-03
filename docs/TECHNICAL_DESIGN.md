@@ -81,6 +81,7 @@ Static assets and API responses share the FastAPI origin. The browser does not c
 erDiagram
     DEPARTMENT ||--o{ TENDER : owns
     DEPARTMENT ||--o{ OFFICER : lists
+    TENDER_TYPE ||--o{ TENDER : classifies
     TENDER ||--o| TENDER_IDENTIFIER : identifies
     TENDER ||--o| AWARD : discloses
     CONTRACTOR ||--o{ AWARD : receives
@@ -95,10 +96,15 @@ erDiagram
         string name UK
         string district
     }
+    TENDER_TYPE {
+        int id PK
+        string name UK
+    }
     TENDER {
         int id PK
         string tender_ref UK
         int department_id FK
+        int tender_type_id FK
         string title
         json extra_data
         string status
@@ -168,7 +174,7 @@ erDiagram
     }
 ```
 
-`TenderIdentifier` is a one-to-one child of `Tender`: its unique `tender_id` foreign key cascades on tender deletion. It stores the source tender ID and procurement reference number separately from the application's internal integer primary key and API `tender_ref`. A tender may have multiple document and spatial-feature rows, while award is one-to-one in the current schema. `extra_data` remains available for additive metadata; credentials and secrets must not be placed there.
+`TenderIdentifier` is a one-to-one child of `Tender`: its unique `tender_id` foreign key cascades on tender deletion. It stores the source tender ID and procurement reference number separately from the application's internal integer primary key and API `tender_ref`. `TenderType` is a normalized lookup table related one-to-many to `Tender`; prototype road construction packages are assigned the `Road` type. A tender may have multiple document and spatial-feature rows, while award is one-to-one in the current schema. `extra_data` remains available for additive metadata; credentials and secrets must not be placed there.
 
 The prototype seed loader reads `backend/app/prototype_data.json` and `backend/app/prototype_geodata.json`. It inserts missing prototype records and their relations idempotently. Startup with `LOAD_PROTOTYPE_DATA=false` stops future seeding; it does not delete previously imported records.
 
