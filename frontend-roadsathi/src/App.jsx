@@ -21,12 +21,16 @@ function Icon({ name, size = 18 }) {
     check: <><path d="m5 12 4 4L19 6"/></>,
     clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
     info: <><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></>,
+    road: <><path d="M8 3 4 21M16 3l4 18M12 4v3m0 3v3m0 3v3"/><path d="M10 3h4M9 21h6"/></>,
+    currency: <><path d="M12 3v18M17 7.5c-.7-1.2-2.3-2-4.5-2-2.5 0-4.5 1.2-4.5 3s1.7 2.7 4.5 3.5 4.5 1.7 4.5 3.5-2 3-4.5 3c-2.2 0-4-.8-4.8-2"/></>,
+    users: <><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1.5A4.5 4.5 0 0 1 8 14h2a4.5 4.5 0 0 1 4.5 4.5V20M16 5.5a3 3 0 0 1 0 5.8M17 14h.5a3.5 3.5 0 0 1 3.5 3.5V20"/></>,
+    report: <><path d="M8 4h8l3 3v13H5V4h3Z"/><path d="M9 4V2h6v2M8 11h8M8 15h5M15 18l2 2 4-5"/></>,
     download: <><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3h14v-3"/></>,
   }
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name] || paths.file}</svg>
 }
 
-function Header({ page, navigate }) {
+function Header({ page, navigate, onStartTour }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(() => window.scrollY > 4)
   useEffect(() => {
@@ -38,8 +42,84 @@ function Header({ page, navigate }) {
     <a href="#overview" className="brand" onClick={e => { e.preventDefault(); navigate('Overview') }} aria-label="RoadSathi home"><span className="brand-mark" aria-hidden="true"><span /></span><span className="brand-name">Road<span>Sathi</span><small>MANIPUR · PUBLIC WORKS</small></span></a>
     <button className="menu-toggle" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'close' : 'menu'} /></button>
     <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">{pages.map(item => <a key={item} href={`#${pageIds[item]}`} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={e => { e.preventDefault(); navigate(item); setMenuOpen(false) }}><Icon name={{ Overview: 'home', Tenders: 'list', 'Map View': 'pin', 'About Us': 'info' }[item]} size={16} /><span>{item}</span></a>)}</nav>
+    <button className="guide-link" type="button" onClick={onStartTour} aria-label="Start the RoadSathi guided tour">Guide</button>
     <a className="staff-link" href="#staff-sign-in" onClick={event => { event.preventDefault(); navigate(page === 'Staff Sign In' ? 'Overview' : 'Staff Sign In') }}><span className="staff-dot" /> {page === 'Staff Sign In' ? 'Public Portal' : 'Staff Sign In'} <Icon name="external" size={14} /></a>
   </div></header>
+}
+
+const tourSteps = [
+  { page: 'Overview', selector: '[data-tour="dashboard"]', title: 'Understanding the dashboard', body: 'The overview counts published tenders and disclosed awards. “Total awarded contract value” is the agreed contract value shown in public records; it does not mean that money has been paid.' },
+  { page: 'Overview', selector: '[data-tour="map-entry"]', title: 'Explore projects', body: 'RoadSathi’s map helps you explore the project locations and see where public road works are taking place. Select “View on map” to continue.' },
+  { page: 'Map View', selector: '.leaflet-control-zoom', title: 'Navigate the map', body: 'Use the zoom controls to move closer to an area or zoom out for the wider picture. Then select a highlighted road or project point to see its available details.' },
+  { page: 'Map View', selector: '[data-tour="map-view-details"]', title: 'Explore project details', body: 'You are viewing a selected infrastructure project. Select “View Details” to open its complete tender record, including contractor information, contract value, and supporting documents.' },
+]
+
+function GuidedNavigation({ mode, step, selectedTender, stats, awardedSum, onStart, onNext, onClose }) {
+  const [spotlight, setSpotlight] = useState(null)
+  const [viewport, setViewport] = useState({ width: 0, height: 0 })
+  const current = tourSteps[step]
+  const selector = step === 3 && selectedTender ? '.details-modal' : current?.selector
+
+  useEffect(() => {
+    if (mode !== 'tour') return undefined
+    let frame
+    const measure = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const width = window.innerWidth
+        const height = window.innerHeight
+        const element = selector && document.querySelector(selector)
+        const bounds = element?.getBoundingClientRect()
+        setViewport({ width, height })
+        setSpotlight(bounds && bounds.width && bounds.height ? {
+          x: Math.max(8, bounds.left - 8), y: Math.max(8, bounds.top - 8),
+          width: Math.min(width - 16, bounds.width + 16), height: Math.min(height - 16, bounds.height + 16),
+        } : null)
+      })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    const observer = new MutationObserver(measure)
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] })
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', measure); window.removeEventListener('scroll', measure, true); observer.disconnect() }
+  }, [mode, selector, step])
+
+  useEffect(() => {
+    if (mode === 'closed') return undefined
+    const closeOnEscape = event => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [mode, onClose])
+
+  if (mode === 'closed') return null
+  if (mode === 'welcome') return <div className="guide-welcome-backdrop"><section className="guide-welcome" role="dialog" aria-modal="true" aria-labelledby="guide-welcome-title">
+    <button className="guide-close" type="button" onClick={onClose} aria-label="Close welcome guide">×</button>
+    <div className="guide-brand-mark" aria-hidden="true">RS</div><Eyebrow>YOUR ROAD SATHI GUIDE</Eyebrow>
+    <h2 id="guide-welcome-title">Welcome to RoadSathi</h2><p className="guide-welcome-lead">Public infrastructure, made easier to understand.</p>
+    <div className="guide-intro-grid"><div><span className="guide-intro-icon"><Icon name="road" size={19} /></span><strong>Explore projects</strong><span>Find public road tender records.</span></div><div><span className="guide-intro-icon"><Icon name="currency" size={19} /></span><strong>Awarded amounts</strong><span>See disclosed contract values.</span></div><div><span className="guide-intro-icon"><Icon name="users" size={19} /></span><strong>Identify contractors</strong><span>Find out who received each contract.</span></div><div><span className="guide-intro-icon"><Icon name="report" size={19} /></span><strong>Report grievances</strong><span>See grievance contacts when listed.</span></div></div>
+    <p className="guide-definition"><strong>What is a tender?</strong> A government invitation for contractors to submit offers to complete a particular work.</p>
+    <div className="guide-actions"><button className="button button-primary" type="button" onClick={onStart}>Explore with RoadSathi <Icon name="arrow" size={16} /></button><button className="button button-outline" type="button" onClick={onClose}>Explore independently</button></div>
+  </section></div>
+
+  const progress = `${step + 1} of ${tourSteps.length}`
+  const detailsOpen = step === 3 && Boolean(selectedTender)
+  const stepBody = step === 0 && stats
+    ? `RoadSathi currently lists ${Number(stats.published_tenders || 0).toLocaleString('en-IN')} published tenders and ${Number(stats.awards_disclosed || 0).toLocaleString('en-IN')} disclosed awards, representing ${formatCurrency(awardedSum)} in contract value. Award values are contract amounts, not payments disbursed.`
+    : current.body
+  const cardHeight = detailsOpen ? 230 : 260
+  const tooltipTop = spotlight && spotlight.y > viewport.height * 0.48 ? Math.max(16, Math.min(viewport.height - cardHeight - 16, spotlight.y - cardHeight - 18)) : spotlight ? Math.min(viewport.height - cardHeight - 16, spotlight.y + spotlight.height + 18) : Math.max(20, (viewport.height - cardHeight) / 2)
+  const tooltipLeft = Math.max(16, (viewport.width - Math.min(370, viewport.width - 32)) / 2)
+  return <>
+    <div className="guide-spotlight" aria-hidden="true" style={{ top: spotlight?.y ?? 0, left: spotlight?.x ?? 0, width: spotlight?.width ?? 0, height: spotlight?.height ?? 0, opacity: spotlight ? 1 : 0 }} />
+    <section key={`${step}-${detailsOpen ? 'details' : 'target'}`} className="guide-tour-card" role="dialog" aria-modal="true" aria-labelledby="guide-tour-title" style={{ top: `${tooltipTop}px`, left: `${tooltipLeft}px` }}>
+      <div className="guide-tour-top"><span className="guide-step-count">STEP {progress}</span><button className="guide-close" type="button" onClick={onClose} aria-label="Skip guided tour">×</button></div>
+      <h2 id="guide-tour-title">{detailsOpen ? 'Project details' : current.title}</h2>
+      <p>{detailsOpen ? 'This record brings the tender details together: its identity and type, department, contractor, contract values, contacts, and source documents.' : stepBody}</p>
+      <div className="guide-progress" aria-label={`Step ${step + 1} of ${tourSteps.length}`}>{tourSteps.map((_, index) => <span key={index} className={index === step ? 'is-current' : index < step ? 'is-complete' : ''} />)}</div>
+      <div className="guide-tour-actions"><button className="guide-skip" type="button" onClick={onClose}>Skip tour</button>{step === 0 ? <button className="button button-primary button-small" type="button" onClick={onNext}>Next <Icon name="arrow" size={15} /></button> : step === 3 ? <button className="button button-primary button-small" type="button" onClick={onClose}>Finish tour <Icon name="check" size={15} /></button> : <span className="guide-hint">{step === 1 ? 'Select “View on map” to continue' : 'Select a highlighted road or project to continue'}</span>}</div>
+    </section>
+  </>
 }
 
 function Eyebrow({ children }) { return <div className="eyebrow"><span />{children}</div> }
@@ -179,9 +259,10 @@ function TenderDetails({ tender, loading, onClose }) {
     </> : <div className="state-panel">Tender details are unavailable.</div>}<div className="modal-footer"><span>RoadSathi · Public information service</span><button className="button button-primary button-small" onClick={onClose}>Close</button></div></section></div>
 }
 
-function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled }) {
+function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled, onTourRoadSelected }) {
   const mapElement = useRef(null)
   const mapRef = useRef(null)
+  const onTourRoadSelectedRef = useRef(onTourRoadSelected)
   const markerRef = useRef(null)
   const projectLayersRef = useRef(null)
   const mapDataRef = useRef(null)
@@ -201,6 +282,7 @@ function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled }) {
   const [mapDataReady, setMapDataReady] = useState(false)
   const [mapRevision, setMapRevision] = useState(0)
   const [searchState, setSearchState] = useState({ loading: false, searched: false, error: '' })
+  useEffect(() => { onTourRoadSelectedRef.current = onTourRoadSelected }, [onTourRoadSelected])
   const loadProjectDetails = useCallback(async tenderRefs => {
     const requestId = ++detailsRequestRef.current
     const refs = [...new Set((Array.isArray(tenderRefs) ? tenderRefs : [tenderRefs]).filter(Boolean))]
@@ -244,7 +326,7 @@ function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled }) {
     setResults([])
     setSearchState({ loading: false, searched: false, error: '' })
     markerRef.current?.remove()
-    if (tenderRefs.length) loadProjectDetails(tenderRefs)
+    if (tenderRefs.length) { loadProjectDetails(tenderRefs); onTourRoadSelectedRef.current?.() }
     else { detailsRequestRef.current++; setSelectedProjects([]); setProjectLoading(false); setProjectError('This mapped road has no linked public tender record.') }
   }, [loadProjectDetails])
   const searchLocation = useCallback(async ({ lat, lng }) => {
@@ -372,7 +454,7 @@ function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled }) {
   }
   return <main className="page-shell map-page">
     <div className="page-heading"><div><Eyebrow>LOCATION-BASED DISCOVERY</Eyebrow><h1>Map view</h1><p>Select a tender route or project point to highlight it on the map and view its available details.</p></div><button className="button button-outline" onClick={findMe}><Icon name="pin" size={16} /> Use my location</button></div>
-    <div className="map-layout">
+    <div className="map-layout" data-tour="map-explorer">
       <div className="map-frame"><div ref={mapElement} className="interactive-map" aria-label="Interactive map of Manipur" /><div className="map-attribution">Map data &copy; OpenStreetMap contributors</div></div>
       <aside className="map-side"><Eyebrow>MAP SEARCH</Eyebrow><h2>Explore mapped projects</h2><p>Roads and project locations use the geographic records currently available in RoadSathi. Select a road or point to view its project details.</p>
         <label className="select-field map-district-field"><span>District</span><select value={selectedDistrict} onChange={event => setSelectedDistrict(event.target.value)}><option value="">All available areas</option>{districts.map(district => <option key={district} value={district}>{district === '__unspecified__' ? 'District not provided' : district}</option>)}</select></label>
@@ -388,7 +470,7 @@ function MapView({ onDetails, onShowOnMap, mapTarget, onTargetHandled }) {
             {selectedRoad.tenderRefs?.length ? <>
               <div className="selected-road-ref">{selectedRoad.tenderRefs.length === 1 ? 'Tender ID' : 'Linked Tender IDs'}: {selectedRoad.tenderRefs.join(' · ')}</div>
               {selectedRoad.unmapped && <div className="map-empty">{mapError ? 'Map data could not be loaded, so route availability could not be confirmed.' : 'This tender has no route geometry or project coordinates available to plot. Its available project information is shown below.'}</div>}
-              <div className="map-selection-actions"><button className="button button-primary button-small" onClick={() => setShowProjectDetails(value => !value)}>{showProjectDetails ? 'Hide Details' : 'Show Details'}</button><button className="button button-outline button-small" onClick={() => onDetails({ tender_ref: selectedRoad.tenderRefs[0] })}>View Details</button></div>
+              <div className="map-selection-actions"><button className="button button-primary button-small" onClick={() => setShowProjectDetails(value => !value)}>{showProjectDetails ? 'Hide Details' : 'Show Details'}</button><button className="button button-outline button-small" data-tour="map-view-details" onClick={() => onDetails({ tender_ref: selectedRoad.tenderRefs[0] })}>View Details</button></div>
             </> : <div className="map-empty">No registered tender is linked to this road. Available route information is shown here.</div>}
             {selectedRoad.attributes?.length > 0 && <details className="route-attributes"><summary>Available road information</summary><dl>{selectedRoad.attributes.map(([label, value], index) => <div key={`${label}-${index}`}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></details>}
           </section>
@@ -498,6 +580,8 @@ function StaffAccess() {
 
 function App() {
   const [page, setPage] = useState(() => window.location.hash.slice(1) === 'staff-sign-in' ? 'Staff Sign In' : (pages.find(p => pageIds[p] === window.location.hash.slice(1)) || 'Overview'))
+  const [guideMode, setGuideMode] = useState(() => { try { return localStorage.getItem('roadsathi-guided-tour-complete') ? 'closed' : 'welcome' } catch { return 'welcome' } })
+  const [guideStep, setGuideStep] = useState(0)
   const [tenders, setTenders] = useState([])
   const [departments, setDepartments] = useState([])
   const [stats, setStats] = useState(null)
@@ -511,7 +595,11 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0)
   const mapRequestRef = useRef(0)
   const { q: searchQuery, department_id: departmentFilter, status: statusFilter } = filters
-  const navigate = useCallback(target => { setPage(target); const hash = `#${pageIds[target]}`; if (window.location.hash !== hash) window.history.pushState(null, '', hash); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [])
+  const navigate = useCallback(target => { if (guideMode === 'tour' && guideStep === 1 && target === 'Map View') setGuideStep(2); setPage(target); const hash = `#${pageIds[target]}`; if (window.location.hash !== hash) window.history.pushState(null, '', hash); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [guideMode, guideStep])
+  const closeGuidedTour = useCallback(() => { setGuideMode('closed'); try { localStorage.setItem('roadsathi-guided-tour-complete', 'yes') } catch {} }, [])
+  const startGuidedTour = useCallback(() => { setGuideStep(0); setSelectedTender(null); setGuideMode('tour'); navigate('Overview') }, [navigate])
+  const nextGuidedStep = useCallback(() => { if (guideMode === 'tour' && guideStep === 0) setGuideStep(1) }, [guideMode, guideStep])
+  const handleTourRoadSelected = useCallback(() => { if (guideMode === 'tour' && guideStep === 2) setGuideStep(3) }, [guideMode, guideStep])
   const showTenderOnMap = useCallback(tender => {
     setMapTarget({ ...tender, request: ++mapRequestRef.current })
     navigate('Map View')
@@ -557,16 +645,16 @@ function App() {
   const awardedSum = stats?.total_awarded_value ?? awardedRows.reduce((sum, tender) => sum + Number(tender.award.awarded_value), 0)
   const tenderProps = { items: tenders, onDetails: openDetails, onShowOnMap: showTenderOnMap, loading, error, onRetry: () => setRefreshKey(key => key + 1) }
   const sortedTenders = useMemo(() => sortTenderRecords(tenders, filters.sort), [tenders, filters.sort])
-  return <div className="app-shell"><Header page={page} navigate={navigate} />
+  return <div className="app-shell"><Header page={page} navigate={navigate} onStartTour={startGuidedTour} />
     {page === 'Staff Sign In' && <StaffAccess />}
-    {page === 'Overview' && <main><section className="hero-section"><div className="hero-image" role="img" aria-label="Road through Manipur" /><div className="hero-shade" /><div className="hero-content"><div className="hero-copy"><Eyebrow>MANIPUR · PUBLIC INFRASTRUCTURE</Eyebrow><h1>Public infrastructure.<br /><span>Public knowledge.</span></h1><p>RoadSathi brings road project and tender information into one clear, accessible place for every citizen.</p><div className="hero-actions"><button className="button button-light" onClick={() => navigate('Tenders')}>Explore tenders <Icon name="arrow" size={16} /></button><button className="button button-ghost-light" onClick={() => navigate('Map View')}><Icon name="pin" size={16} /> View on map</button></div></div><div className="hero-caption">INDO-MYANMAR ROAD · MANIPUR <a href="https://commons.wikimedia.org/wiki/File:Indo-Myanmar_Road,_Asian_Highway_No.1.jpg" target="_blank" rel="noreferrer">Photo: Premdatta Laitonjam / CC BY-SA 4.0</a></div></div></section>
-      <div className="page-shell overview-content"><section className="stats-strip" aria-label="RoadSathi summary statistics"><Stat label="Published tenders" value={stats ? Number(stats.published_tenders || 0).toLocaleString('en-IN') : '—'} /><Stat label="Awards disclosed" value={stats ? Number(stats.awards_disclosed || 0).toLocaleString('en-IN') : '—'} /><Stat label="Total awarded contract value" value={stats ? formatCurrency(awardedSum) : '—'} note="As disclosed in public records" /><Stat label="Departments" value={stats ? Number(stats.departments || 0).toLocaleString('en-IN') : '—'} /></section>
+    {page === 'Overview' && <main><section className="hero-section"><div className="hero-image" role="img" aria-label="Road through Manipur" /><div className="hero-shade" /><div className="hero-content"><div className="hero-copy"><Eyebrow>MANIPUR · PUBLIC INFRASTRUCTURE</Eyebrow><h1>Public infrastructure.<br /><span>Public knowledge.</span></h1><p>RoadSathi brings road project and tender information into one clear, accessible place for every citizen.</p><div className="hero-actions"><button className="button button-light" onClick={() => navigate('Tenders')}>Explore tenders <Icon name="arrow" size={16} /></button><button className="button button-ghost-light" data-tour="map-entry" onClick={() => navigate('Map View')}><Icon name="pin" size={16} /> View on map</button></div></div><div className="hero-caption">INDO-MYANMAR ROAD · MANIPUR <a href="https://commons.wikimedia.org/wiki/File:Indo-Myanmar_Road,_Asian_Highway_No.1.jpg" target="_blank" rel="noreferrer">Photo: Premdatta Laitonjam / CC BY-SA 4.0</a></div></div></section>
+      <div className="page-shell overview-content"><section className="stats-strip" data-tour="dashboard" aria-label="RoadSathi summary statistics"><Stat label="Published tenders" value={stats ? Number(stats.published_tenders || 0).toLocaleString('en-IN') : '—'} /><Stat label="Awards disclosed" value={stats ? Number(stats.awards_disclosed || 0).toLocaleString('en-IN') : '—'} /><Stat label="Total awarded contract value" value={stats ? formatCurrency(awardedSum) : '—'} note="As disclosed in public records" /><Stat label="Departments" value={stats ? Number(stats.departments || 0).toLocaleString('en-IN') : '—'} /></section>
         <div className="overview-grid"><section className="activity-section"><div className="section-title-row"><div><Eyebrow>RECENT UPDATES</Eyebrow><h2>Latest tender activity</h2></div><button className="text-button" onClick={() => navigate('Tenders')}>All tenders <Icon name="arrow" size={15} /></button></div>{activity.length ? <div className="activity-list">{activity.map((item, i) => <div className="activity-item" key={`${item.tender_ref}-${i}`}><span className={`activity-icon ${item.status === 'awarded' ? 'activity-award' : ''}`}><Icon name={item.status === 'awarded' ? 'check' : 'clock'} size={16} /></span><div className="activity-copy"><strong>{item.event}</strong><span>{item.title}</span><small>{item.department} · {formatDate(item.created_at)}</small></div><span className={`status-pill ${statusClass(item.status)}`}><i />{formatStatus(item.status)}</span></div>)}</div> : <div className="subtle-empty">Activity will appear here when public records are available.</div>}</section>
           <aside className="award-summary"><Eyebrow>CONTRACT DISCLOSURE</Eyebrow><h2>Awarded contracts</h2><p>Explore contract awards and contractor information published through RoadSathi.</p><div className="award-total">{stats ? formatCurrency(awardedSum) : '—'}</div><div className="award-total-label">Total value disclosed</div><div className="award-meta"><span>{stats ? Number(stats.awards_disclosed || 0).toLocaleString('en-IN') : '—'} awards listed</span><span>Public records</span></div><button className="text-button" onClick={() => { setFilters(current => ({ ...current, status: 'awarded' })); navigate('Tenders') }}>Review awarded projects <Icon name="arrow" size={15} /></button></aside></div>
         <section className="map-promo"><div className="map-promo-copy"><Eyebrow>GEOGRAPHIC SEARCH</Eyebrow><h2>Explore projects on the map</h2><p>Choose a location in Manipur and discover public tender records associated with nearby project checkpoints.</p><button className="button button-primary" onClick={() => navigate('Map View')}>Open map view <Icon name="arrow" size={16} /></button></div><div className="map-preview"><span className="map-contour contour-one"/><span className="map-contour contour-two"/><span className="map-road road-one"/><span className="map-road road-two"/><span className="map-label">MANIPUR</span><span className="map-marker"><Icon name="pin" size={17} /></span><span className="map-coordinate">24.8170° N &nbsp; 93.9368° E</span></div></section></div>
     </main>}
-    {page === 'Tenders' && <main className="page-shell tenders-page"><div className="page-heading"><div><Eyebrow>PUBLIC PROCUREMENT RECORDS</Eyebrow><h1>Tenders &amp; projects</h1><p>Search published road projects, tender notices and disclosed contract awards.</p></div><div className="record-count"><strong>{loading ? '—' : sortedTenders.length}</strong><span>records shown</span></div></div><section className="filter-panel" aria-label="Tender search and filters"><label className="search-field"><Icon name="search" size={18} /><input type="search" placeholder="Search project, tender ID or department" value={filters.q} onChange={e => setFilters({ ...filters, q: e.target.value })} /><kbd>Search</kbd></label><label className="select-field"><span>Department</span><select value={filters.department_id} onChange={e => setFilters({ ...filters, department_id: e.target.value })}><option value="">All departments</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="select-field"><span>Project status</span><select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}><option value="">All statuses</option><option value="published">Published</option><option value="awarded">Awarded</option></select></label><label className="select-field sort-field"><span>Sort by</span><select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}><option value="-updated_at">Recently updated</option><option value="date-oldest">Oldest updated</option><option value="name-asc">Project name (A–Z)</option><option value="name-desc">Project name (Z–A)</option><option value="award-high">Highest awarded value</option><option value="award-low">Lowest awarded value</option><option value="close-soon">Closing soon</option></select></label></section><section className="results-section"><div className="section-title-row results-heading"><div><Eyebrow>AVAILABLE RECORDS</Eyebrow><h2>Road tenders</h2></div><span className="result-count">{loading ? 'Loading' : `${sortedTenders.length} records`}</span></div><TenderTable {...tenderProps} items={sortedTenders} /></section><p className="records-note"><Icon name="file" size={15} /> Award amounts are shown where disclosed. Amounts disbursed are not currently included in the public tender API.</p></main>}
-    {page === 'Map View' && <MapView onDetails={openDetails} onShowOnMap={showTenderOnMap} mapTarget={mapTarget} onTargetHandled={handleMapTargetHandled} />}
+    {page === 'Tenders' && <main className="page-shell tenders-page"><div className="page-heading"><div><Eyebrow>PUBLIC PROCUREMENT RECORDS</Eyebrow><h1>Tenders &amp; projects</h1><p>Search published road projects, tender notices and disclosed contract awards.</p></div><div className="record-count"><strong>{loading ? '—' : sortedTenders.length}</strong><span>records shown</span></div></div><section className="filter-panel" data-tour="tender-search" aria-label="Tender search and filters"><label className="search-field"><Icon name="search" size={18} /><input type="search" placeholder="Search project, tender ID or department" value={filters.q} onChange={e => setFilters({ ...filters, q: e.target.value })} /><kbd>Search</kbd></label><label className="select-field"><span>Department</span><select value={filters.department_id} onChange={e => setFilters({ ...filters, department_id: e.target.value })}><option value="">All departments</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label className="select-field"><span>Project status</span><select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}><option value="">All statuses</option><option value="published">Published</option><option value="awarded">Awarded</option></select></label><label className="select-field sort-field"><span>Sort by</span><select value={filters.sort} onChange={e => setFilters({ ...filters, sort: e.target.value })}><option value="-updated_at">Recently updated</option><option value="date-oldest">Oldest updated</option><option value="name-asc">Project name (A–Z)</option><option value="name-desc">Project name (Z–A)</option><option value="award-high">Highest awarded value</option><option value="award-low">Lowest awarded value</option><option value="close-soon">Closing soon</option></select></label></section><section className="results-section"><div className="section-title-row results-heading"><div><Eyebrow>AVAILABLE RECORDS</Eyebrow><h2>Road tenders</h2></div><span className="result-count">{loading ? 'Loading' : `${sortedTenders.length} records`}</span></div><TenderTable {...tenderProps} items={sortedTenders} /></section><p className="records-note"><Icon name="file" size={15} /> Award amounts are shown where disclosed. Amounts disbursed are not currently included in the public tender API.</p></main>}
+    {page === 'Map View' && <MapView onDetails={openDetails} onShowOnMap={showTenderOnMap} mapTarget={mapTarget} onTargetHandled={handleMapTargetHandled} onTourRoadSelected={handleTourRoadSelected} />}
     {page === 'About Us' && <main className="page-shell about-page"><div className="page-heading"><div><Eyebrow>ABOUT THE PORTAL</Eyebrow><h1>Public works, made visible.</h1><p>RoadSathi is an independent public-information platform for road tenders and infrastructure projects in Manipur.</p></div></div><div className="about-layout"><section className="about-main"><h2>Clear information for everyone</h2><p>RoadSathi brings tender notices, project details, departments, contractors, award values and supporting documents together in one place. The portal helps residents understand what road work has been recorded and where to find the related public information.</p><p>Use keyword search to find a tender by its project name, identifier or department. Map View offers another way to discover records where project checkpoints have been registered.</p><h2>How to read a record</h2><p>Each tender record presents the information currently available through the public service. An award value is the agreed contract amount and does not confirm that the amount has been paid. Source and verification notes remain attached to prototype records where applicable.</p><p>Have questions about the records or procurement terms? <a className="faq-text-link" href="#faqs" onClick={event => { event.preventDefault(); document.getElementById('faqs')?.scrollIntoView({ behavior: 'smooth' }) }}>FAQs</a>.</p></section><aside className="about-facts"><Eyebrow>ROAD SATHI</Eyebrow><dl><div><dt>Service area</dt><dd>Manipur, India</dd></div><div><dt>Information</dt><dd>Public road tenders and awards</dd></div><div><dt>Search methods</dt><dd>Keyword and map-based</dd></div><div><dt>Maintained by</dt><dd>RoadSathi</dd></div></dl><button className="text-button" onClick={() => navigate('Tenders')}>Browse public records <Icon name="arrow" size={15} /></button></aside></div><section className="faq-content" id="faqs"><div className="faq-heading"><Eyebrow>HELP &amp; DEFINITIONS</Eyebrow><h2>Frequently asked questions</h2><p>About RoadSathi and common government procurement terms.</p></div><section className="faq-section"><h3>General FAQs – About RoadSathi</h3><dl className="faq-list">
       <div><dt>Is RoadSathi an official government website?</dt><dd>No. RoadSathi is an independent public-information platform. It organises publicly available government procurement information and links users to the original sources. It does not represent or replace any government department.</dd></div>
       <div><dt>Does the awarded contract amount mean the contractor has received that money?</dt><dd>No. The awarded contract amount is the agreed cost of completing the work. It does not necessarily mean the contractor has already received that money.</dd></div>
@@ -589,6 +677,7 @@ function App() {
     </dl></section></section></main>}
     <footer className="site-footer"><div className="footer-inner"><span>© {new Date().getFullYear()} RoadSathi · Public infrastructure transparency</span><span>Manipur, India</span></div></footer>
     {selectedTender && <TenderDetails tender={selectedTender} loading={detailsLoading} onClose={() => { setSelectedTender(null); setDetailsLoading(false) }} />}
+    <GuidedNavigation mode={guideMode} step={guideStep} selectedTender={selectedTender} stats={stats} awardedSum={awardedSum} onStart={startGuidedTour} onNext={nextGuidedStep} onClose={closeGuidedTour} />
     <RoadSathiAssistant page={page} navigate={navigate} />
   </div>
 }
