@@ -131,6 +131,7 @@ export default function RoadSathiAssistant({ page, navigate }) {
   const [showQuestions, setShowQuestions] = useState(true)
   const [idleCue, setIdleCue] = useState(false)
   const [blinking, setBlinking] = useState(false)
+  const [blinkReady, setBlinkReady] = useState(false)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
   const triggerRef = useRef(null)
@@ -155,15 +156,17 @@ export default function RoadSathiAssistant({ page, navigate }) {
     const openEyes = new Image()
     const closedEyes = new Image()
     openEyes.src = '/roadsathi-mascot-open.webp'
+    closedEyes.onload = () => setBlinkReady(true)
     closedEyes.src = '/roadsathi-mascot-blink.svg'
+    return () => { closedEyes.onload = null }
   }, [])
 
   const blink = useCallback(() => {
-    if (document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!blinkReady || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     window.clearTimeout(blinkTimerRef.current)
     setBlinking(true)
     blinkTimerRef.current = window.setTimeout(() => setBlinking(false), 190)
-  }, [])
+  }, [blinkReady])
   useEffect(() => { blinkNowRef.current = blink }, [blink])
 
   useEffect(() => {
@@ -174,8 +177,8 @@ export default function RoadSathiAssistant({ page, navigate }) {
       if (stopped || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
       blinkDelayRef.current = window.setTimeout(() => {
         blinkNowRef.current?.()
-        scheduleBlink()
-      }, 4000 + Math.random() * 2000)
+        if (!stopped) blinkDelayRef.current = window.setTimeout(scheduleBlink, 190)
+      }, 2000)
     }
     const handleVisibility = () => {
       if (document.hidden) {
@@ -344,7 +347,8 @@ export default function RoadSathiAssistant({ page, navigate }) {
       <i aria-hidden="true" />
     </div>}
     <button ref={triggerRef} className={`guide-mascot-trigger ${open ? 'is-open' : ''} ${idleCue && !open ? 'is-idle-cue' : ''}`} type="button" onClick={() => open ? setOpen(false) : show()} aria-label={open ? 'Close RoadSathi Guide' : 'Open RoadSathi Guide'} aria-expanded={open}>
-      <img src={blinking ? '/roadsathi-mascot-blink.svg' : '/roadsathi-mascot-open.webp'} alt="" />
+      <img src="/roadsathi-mascot-open.webp" alt="" aria-hidden="true" className="guide-mascot-image" />
+      <img src="/roadsathi-mascot-blink.svg" alt="" aria-hidden="true" className={`guide-mascot-image guide-mascot-blink-image ${blinking && blinkReady ? 'is-visible' : ''}`} />
       {!open && <span className="guide-notification" aria-hidden="true"><AssistantIcon name="chat" size={13} /></span>}
     </button>
   </div>
