@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, formatCurrency, formatDate, formatStatus, statusClass } from './api.js'
 import { sortTenderRecords } from './tenderSorting.js'
+import RoadSathiAssistant from './RoadSathiAssistant.jsx'
 import './road.css'
 
 const pages = ['Overview', 'Tenders', 'Map View', 'About Us']
@@ -8,6 +9,8 @@ const pageIds = { Overview: 'overview', Tenders: 'tenders', 'Map View': 'map', '
 
 function Icon({ name, size = 18 }) {
   const paths = {
+    home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
+    list: <><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></>,
     search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,
     pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></>,
     arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
@@ -25,10 +28,16 @@ function Icon({ name, size = 18 }) {
 
 function Header({ page, navigate }) {
   const [menuOpen, setMenuOpen] = useState(false)
-  return <header className="site-header"><div className="header-inner">
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 4)
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 4)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+  return <header className={`site-header${scrolled ? ' is-scrolled' : ''}`}><div className="header-inner">
     <a href="#overview" className="brand" onClick={e => { e.preventDefault(); navigate('Overview') }} aria-label="RoadSathi home"><span className="brand-mark" aria-hidden="true"><span /></span><span className="brand-name">Road<span>Sathi</span><small>MANIPUR · PUBLIC WORKS</small></span></a>
     <button className="menu-toggle" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'close' : 'menu'} /></button>
-    <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">{pages.map(item => <a key={item} href={`#${pageIds[item]}`} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={e => { e.preventDefault(); navigate(item); setMenuOpen(false) }}>{item}</a>)}</nav>
+    <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">{pages.map(item => <a key={item} href={`#${pageIds[item]}`} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={e => { e.preventDefault(); navigate(item); setMenuOpen(false) }}><Icon name={{ Overview: 'home', Tenders: 'list', 'Map View': 'pin', 'About Us': 'info' }[item]} size={16} /><span>{item}</span></a>)}</nav>
     <a className="staff-link" href="#staff-sign-in" onClick={event => { event.preventDefault(); navigate(page === 'Staff Sign In' ? 'Overview' : 'Staff Sign In') }}><span className="staff-dot" /> {page === 'Staff Sign In' ? 'Public Portal' : 'Staff Sign In'} <Icon name="external" size={14} /></a>
   </div></header>
 }
@@ -580,6 +589,7 @@ function App() {
     </dl></section></section></main>}
     <footer className="site-footer"><div className="footer-inner"><span>© {new Date().getFullYear()} RoadSathi · Public infrastructure transparency</span><span>Manipur, India</span></div></footer>
     {selectedTender && <TenderDetails tender={selectedTender} loading={detailsLoading} onClose={() => { setSelectedTender(null); setDetailsLoading(false) }} />}
+    <RoadSathiAssistant page={page} navigate={navigate} />
   </div>
 }
 

@@ -2,7 +2,8 @@
 :root { font-family:'DM Sans',Arial,sans-serif; font-size:14px; line-height:1.5; letter-spacing:normal; color:#1b2733; color-scheme:light; background:#f1f0eb; font-synthesis:none; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; --navy:#153651; --deep:#0e263a; --blue:#285f84; --ink:#1b2733; --muted:#64727e; --line:#c5c4bc; --green:#2b6a53; }
 * { box-sizing:border-box; }
 html { min-width:320px; scroll-behavior:smooth; background:#f1f0eb; }
-body { margin:0; min-width:320px; min-height:100vh; background:#f1f0eb; }
+body { position:relative; isolation:isolate; margin:0; min-width:320px; min-height:100vh; background:#f1f0eb; }
+body::before { position:fixed; z-index:-1; inset:0; content:''; background:url('/roadsathi-map-background.webp') center/cover no-repeat; opacity:.18; pointer-events:none; }
 body.modal-open { overflow:hidden; }
 button,input,select { font:inherit; }
 button { cursor:pointer; transition:transform 220ms ease,box-shadow 220ms ease; }
@@ -13,7 +14,8 @@ a { color:inherit; }
 h1,h2,h3,p { text-align:inherit; }
 ::selection { background:#cedfe9; color:var(--deep); }
 .app-shell { min-height:100vh; display:flex; flex-direction:column; }
-.site-header { height:76px; flex:0 0 76px; position:relative; z-index:20; background:#fff; border-bottom:1px solid var(--line); }
+.site-header { height:76px; flex:0 0 76px; position:sticky; top:0; z-index:700; background:#fff; border-bottom:1px solid var(--line); transition:box-shadow 180ms ease; }
+.site-header.is-scrolled { box-shadow:0 4px 12px rgba(13,38,58,.11); }
 .header-inner { max-width:1240px; height:100%; margin:auto; padding:0 28px; display:flex; align-items:center; }
 .brand { display:inline-flex; align-items:center; gap:11px; min-width:250px; text-decoration:none; }
 .brand-mark { width:35px; height:35px; border:2px solid var(--navy); border-radius:50%; display:grid; place-items:center; position:relative; }
@@ -23,7 +25,7 @@ h1,h2,h3,p { text-align:inherit; }
 .brand-name>span { font-weight:500; }
 .brand-name small { display:block; margin-top:5px; color:#71808b; font:600 8px/1 'DM Sans',sans-serif; letter-spacing:1.1px; }
 .main-nav { height:100%; margin:0 auto; display:flex; align-items:stretch; gap:28px; }
-.main-nav a { position:relative; z-index:0; isolation:isolate; display:inline-flex; align-items:center; color:#586875; font-size:13px; font-weight:600; text-decoration:none; transition:transform 220ms ease,color 220ms ease; }
+.main-nav a { position:relative; z-index:0; isolation:isolate; display:inline-flex; align-items:center; gap:7px; color:#586875; font-size:13px; font-weight:600; text-decoration:none; transition:transform 220ms ease,color 220ms ease; }
 .main-nav a::before { content:''; position:absolute; z-index:-1; top:50%; right:-9px; left:-9px; height:38px; transform:translateY(-50%); border-radius:4px; background-color:transparent; box-shadow:0 4px 14px rgba(13,38,58,0); transition:background-color 220ms ease,box-shadow 220ms ease; pointer-events:none; }
 .main-nav a:hover,.main-nav a.active { color:var(--navy); }
 .main-nav a.active:after { content:''; height:3px; position:absolute; left:0; right:0; bottom:-1px; background:var(--navy); }

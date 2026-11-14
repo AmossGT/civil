@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="660" viewBox="0 0 560 660">
+  <image href="/roadsathi-mascot-open.webp" width="560" height="660" />
+  <!-- Cover the open-eye chevrons with the existing face tone. -->
+  <path d="M145 431 L201 456 L151 484 L139 473 L178 456 L142 439 Z" fill="#20566f" />
+  <path d="M359 431 L303 456 L353 484 L365 473 L326 456 L362 439 Z" fill="#20566f" />
+  <!-- Relaxed horizontal-line eyes, matching the supplied blink reference. -->
+  <g fill="none" stroke="#94dce7" stroke-width="6" stroke-linecap="round">
+    <path d="M151 444 H190 M154 456 H187 M157 468 H184" />
+    <path d="M318 444 H357 M321 456 H354 M324 468 H351" />
+  </g>
+</svg>
