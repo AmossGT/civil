@@ -155,9 +155,9 @@ export default function RoadSathiAssistant({ page, navigate }) {
   useEffect(() => {
     const openEyes = new Image()
     const closedEyes = new Image()
-    openEyes.src = '/roadsathi-mascot-open.webp'
+    openEyes.src = '/roadsathi-mascot-open.png'
     closedEyes.onload = () => setBlinkReady(true)
-    closedEyes.src = '/roadsathi-mascot-blink.svg'
+    closedEyes.src = '/roadsathi-mascot-blink.png'
     return () => { closedEyes.onload = null }
   }, [])
 
@@ -316,7 +316,7 @@ export default function RoadSathiAssistant({ page, navigate }) {
   return <div className="roadsathi-guide-widget">
     {open && <section className="guide-panel" role="dialog" aria-modal="false" aria-labelledby="guide-title">
       <header className="guide-header">
-        <img src="/roadsathi-mascot-open.webp" alt="" className="guide-header-mascot" />
+        <img src="/roadsathi-mascot-open.png" alt="" className="guide-header-mascot" />
         <div className="guide-header-copy"><strong id="guide-title">RoadSathi Guide</strong><span><i /> Here to help you explore</span></div>
         <button className="guide-close" type="button" aria-label="Close RoadSathi Guide" onClick={() => { setOpen(false); triggerRef.current?.focus() }}><AssistantIcon name="close" /></button>
       </header>
@@ -347,8 +347,8 @@ export default function RoadSathiAssistant({ page, navigate }) {
       <i aria-hidden="true" />
     </div>}
     <button ref={triggerRef} className={`guide-mascot-trigger ${open ? 'is-open' : ''} ${idleCue && !open ? 'is-idle-cue' : ''}`} type="button" onClick={() => open ? setOpen(false) : show()} aria-label={open ? 'Close RoadSathi Guide' : 'Open RoadSathi Guide'} aria-expanded={open}>
-      <img src="/roadsathi-mascot-open.webp" alt="" aria-hidden="true" className="guide-mascot-image" />
-      <img src="/roadsathi-mascot-blink.svg" alt="" aria-hidden="true" className={`guide-mascot-image guide-mascot-blink-image ${blinking && blinkReady ? 'is-visible' : ''}`} />
+      <img src="/roadsathi-mascot-open.png" alt="" aria-hidden="true" className="guide-mascot-image" />
+      <img src="/roadsathi-mascot-blink.png" alt="" aria-hidden="true" className={`guide-mascot-image guide-mascot-blink-image ${blinking && blinkReady ? 'is-visible' : ''}`} />
       {!open && <span className="guide-notification" aria-hidden="true"><AssistantIcon name="chat" size={13} /></span>}
     </button>
   </div>
