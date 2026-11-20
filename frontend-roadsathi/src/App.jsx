@@ -25,12 +25,13 @@ function Icon({ name, size = 18 }) {
     currency: <><path d="M12 3v18M17 7.5c-.7-1.2-2.3-2-4.5-2-2.5 0-4.5 1.2-4.5 3s1.7 2.7 4.5 3.5 4.5 1.7 4.5 3.5-2 3-4.5 3c-2.2 0-4-.8-4.8-2"/></>,
     users: <><circle cx="9" cy="8" r="3"/><path d="M3.5 20v-1.5A4.5 4.5 0 0 1 8 14h2a4.5 4.5 0 0 1 4.5 4.5V20M16 5.5a3 3 0 0 1 0 5.8M17 14h.5a3.5 3.5 0 0 1 3.5 3.5V20"/></>,
     report: <><path d="M8 4h8l3 3v13H5V4h3Z"/><path d="M9 4V2h6v2M8 11h8M8 15h5M15 18l2 2 4-5"/></>,
+    compass: <><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2.1 5-4.9 2 2-4.9 5-2.1Z"/></>,
     download: <><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3h14v-3"/></>,
   }
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{paths[name] || paths.file}</svg>
 }
 
-function Header({ page, navigate, onStartTour }) {
+function Header({ page, navigate, onOpenGuide }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(() => window.scrollY > 4)
   useEffect(() => {
@@ -42,7 +43,7 @@ function Header({ page, navigate, onStartTour }) {
     <a href="#overview" className="brand" onClick={e => { e.preventDefault(); navigate('Overview') }} aria-label="RoadSathi home"><span className="brand-mark" aria-hidden="true"><span /></span><span className="brand-name">Road<span>Sathi</span><small>MANIPUR · PUBLIC WORKS</small></span></a>
     <button className="menu-toggle" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'close' : 'menu'} /></button>
     <nav className={`main-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">{pages.map(item => <a key={item} href={`#${pageIds[item]}`} className={page === item ? 'active' : ''} aria-current={page === item ? 'page' : undefined} onClick={e => { e.preventDefault(); navigate(item); setMenuOpen(false) }}><Icon name={{ Overview: 'home', Tenders: 'list', 'Map View': 'pin', 'About Us': 'info' }[item]} size={16} /><span>{item}</span></a>)}</nav>
-    <button className="guide-link" type="button" onClick={onStartTour} aria-label="Start the RoadSathi guided tour">Guide</button>
+    <button className="guide-link" type="button" onClick={onOpenGuide} aria-label="Open the RoadSathi guide">Guide</button>
     <a className="staff-link" href="#staff-sign-in" onClick={event => { event.preventDefault(); navigate(page === 'Staff Sign In' ? 'Overview' : 'Staff Sign In') }}><span className="staff-dot" /> {page === 'Staff Sign In' ? 'Public Portal' : 'Staff Sign In'} <Icon name="external" size={14} /></a>
   </div></header>
 }
@@ -57,8 +58,11 @@ const tourSteps = [
 function GuidedNavigation({ mode, step, selectedTender, stats, awardedSum, onStart, onNext, onClose }) {
   const [spotlight, setSpotlight] = useState(null)
   const [viewport, setViewport] = useState({ width: 0, height: 0 })
+  const [cardHeight, setCardHeight] = useState(260)
+  const cardRef = useRef(null)
   const current = tourSteps[step]
   const selector = step === 3 && selectedTender ? '.details-modal' : current?.selector
+  const detailsOpen = step === 3 && Boolean(selectedTender)
 
   useEffect(() => {
     if (mode !== 'tour') return undefined
@@ -86,6 +90,15 @@ function GuidedNavigation({ mode, step, selectedTender, stats, awardedSum, onSta
   }, [mode, selector, step])
 
   useEffect(() => {
+    if (mode !== 'tour') return undefined
+    const frame = requestAnimationFrame(() => {
+      const height = cardRef.current?.getBoundingClientRect().height
+      if (height) setCardHeight(height)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [mode, step, detailsOpen, viewport.width, viewport.height])
+
+  useEffect(() => {
     if (mode === 'closed') return undefined
     const closeOnEscape = event => { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', closeOnEscape)
@@ -95,27 +108,32 @@ function GuidedNavigation({ mode, step, selectedTender, stats, awardedSum, onSta
   if (mode === 'closed') return null
   if (mode === 'welcome') return <div className="guide-welcome-backdrop"><section className="guide-welcome" role="dialog" aria-modal="true" aria-labelledby="guide-welcome-title">
     <button className="guide-close" type="button" onClick={onClose} aria-label="Close welcome guide">×</button>
-    <div className="guide-brand-mark" aria-hidden="true">RS</div><Eyebrow>YOUR ROAD SATHI GUIDE</Eyebrow>
-    <h2 id="guide-welcome-title">Welcome to RoadSathi</h2><p className="guide-welcome-lead">Public infrastructure, made easier to understand.</p>
-    <div className="guide-intro-grid"><div><span className="guide-intro-icon"><Icon name="road" size={19} /></span><strong>Explore projects</strong><span>Find public road tender records.</span></div><div><span className="guide-intro-icon"><Icon name="currency" size={19} /></span><strong>Awarded amounts</strong><span>See disclosed contract values.</span></div><div><span className="guide-intro-icon"><Icon name="users" size={19} /></span><strong>Identify contractors</strong><span>Find out who received each contract.</span></div><div><span className="guide-intro-icon"><Icon name="report" size={19} /></span><strong>Report grievances</strong><span>See grievance contacts when listed.</span></div></div>
-    <p className="guide-definition"><strong>What is a tender?</strong> A government invitation for contractors to submit offers to complete a particular work.</p>
-    <div className="guide-actions"><button className="button button-primary" type="button" onClick={onStart}>Explore with RoadSathi <Icon name="arrow" size={16} /></button><button className="button button-outline" type="button" onClick={onClose}>Explore independently</button></div>
+    <div className="guide-welcome-brand"><span className="brand-mark" aria-hidden="true"><span /></span><span className="brand-name">Road<span>Sathi</span><small>MANIPUR · PUBLIC WORKS</small></span></div>
+    <h2 id="guide-welcome-title">Welcome to RoadSathi.</h2><p className="guide-welcome-lead">Public infrastructure, made easier to understand.</p>
+    <div className="guide-intro-grid"><div><span className="guide-intro-icon"><Icon name="road" size={19} /></span><strong>Explore projects</strong><span>Discover public infrastructure projects.</span></div><div><span className="guide-intro-icon"><Icon name="currency" size={19} /></span><strong>Awarded amounts</strong><span>See disclosed contract values.</span></div><div><span className="guide-intro-icon"><Icon name="users" size={19} /></span><strong>Identify contractors</strong><span>Find who received each contract.</span></div><div><span className="guide-intro-icon"><Icon name="report" size={19} /></span><strong>Report grievances</strong><span>Find contacts for infrastructure-related grievances.</span></div></div>
+    <p className="guide-definition"><strong>What is a tender?</strong> A formal process where a government department invites companies or contractors to submit bids for a particular project or service.</p>
+    <div className="guide-actions"><button className="button button-primary" type="button" onClick={onStart}><Icon name="arrow" size={16} /><span><strong>Explore with RoadSathi</strong><small>Guided navigation through the platform</small></span></button><button className="button button-outline" type="button" onClick={onClose}><Icon name="compass" size={17} /><span><strong>Explore independently</strong><small>Browse the platform on your own</small></span></button></div>
   </section></div>
 
   const progress = `${step + 1} of ${tourSteps.length}`
-  const detailsOpen = step === 3 && Boolean(selectedTender)
   const stepBody = step === 0 && stats
     ? `RoadSathi currently lists ${Number(stats.published_tenders || 0).toLocaleString('en-IN')} published tenders and ${Number(stats.awards_disclosed || 0).toLocaleString('en-IN')} disclosed awards, representing ${formatCurrency(awardedSum)} in contract value. Award values are contract amounts, not payments disbursed.`
     : current.body
-  const cardHeight = detailsOpen ? 230 : 260
-  const tooltipTop = spotlight && spotlight.y > viewport.height * 0.48 ? Math.max(16, Math.min(viewport.height - cardHeight - 16, spotlight.y - cardHeight - 18)) : spotlight ? Math.min(viewport.height - cardHeight - 16, spotlight.y + spotlight.height + 18) : Math.max(20, (viewport.height - cardHeight) / 2)
-  const tooltipLeft = Math.max(16, (viewport.width - Math.min(370, viewport.width - 32)) / 2)
+  const cardWidth = Math.min(370, viewport.width - 32)
+  const tooltipTop = detailsOpen
+    ? Math.max(16, (viewport.height - cardHeight) / 2)
+    : spotlight && spotlight.y > viewport.height * 0.48
+      ? Math.max(16, Math.min(viewport.height - cardHeight - 16, spotlight.y - cardHeight - 18))
+      : spotlight ? Math.min(viewport.height - cardHeight - 16, spotlight.y + spotlight.height + 18) : Math.max(20, (viewport.height - cardHeight) / 2)
+  const tooltipLeft = detailsOpen && spotlight
+    ? Math.max(16, Math.min(viewport.width - cardWidth - 16, spotlight.x + spotlight.width + 16))
+    : Math.max(16, (viewport.width - cardWidth) / 2)
   return <>
     <div className="guide-spotlight" aria-hidden="true" style={{ top: spotlight?.y ?? 0, left: spotlight?.x ?? 0, width: spotlight?.width ?? 0, height: spotlight?.height ?? 0, opacity: spotlight ? 1 : 0 }} />
-    <section key={`${step}-${detailsOpen ? 'details' : 'target'}`} className="guide-tour-card" role="dialog" aria-modal="true" aria-labelledby="guide-tour-title" style={{ top: `${tooltipTop}px`, left: `${tooltipLeft}px` }}>
+    <section ref={cardRef} key={`${step}-${detailsOpen ? 'details' : 'target'}`} className={`guide-tour-card${detailsOpen ? ' is-project-details' : ''}`} role="dialog" aria-modal="true" aria-labelledby="guide-tour-title" style={{ top: `${tooltipTop}px`, left: `${tooltipLeft}px` }}>
       <div className="guide-tour-top"><span className="guide-step-count">STEP {progress}</span><button className="guide-close" type="button" onClick={onClose} aria-label="Skip guided tour">×</button></div>
       <h2 id="guide-tour-title">{detailsOpen ? 'Project details' : current.title}</h2>
-      <p>{detailsOpen ? 'This record brings the tender details together: its identity and type, department, contractor, contract values, contacts, and source documents.' : stepBody}</p>
+      <p>{detailsOpen ? 'Here you can review the tender identity, department, contractor, contract values, contacts, and source documents.' : stepBody}</p>
       <div className="guide-progress" aria-label={`Step ${step + 1} of ${tourSteps.length}`}>{tourSteps.map((_, index) => <span key={index} className={index === step ? 'is-current' : index < step ? 'is-complete' : ''} />)}</div>
       <div className="guide-tour-actions"><button className="guide-skip" type="button" onClick={onClose}>Skip tour</button>{step === 0 ? <button className="button button-primary button-small" type="button" onClick={onNext}>Next <Icon name="arrow" size={15} /></button> : step === 3 ? <button className="button button-primary button-small" type="button" onClick={onClose}>Finish tour <Icon name="check" size={15} /></button> : <span className="guide-hint">{step === 1 ? 'Select “View on map” to continue' : 'Select a highlighted road or project to continue'}</span>}</div>
     </section>
@@ -597,6 +615,7 @@ function App() {
   const { q: searchQuery, department_id: departmentFilter, status: statusFilter } = filters
   const navigate = useCallback(target => { if (guideMode === 'tour' && guideStep === 1 && target === 'Map View') setGuideStep(2); setPage(target); const hash = `#${pageIds[target]}`; if (window.location.hash !== hash) window.history.pushState(null, '', hash); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [guideMode, guideStep])
   const closeGuidedTour = useCallback(() => { setGuideMode('closed'); try { localStorage.setItem('roadsathi-guided-tour-complete', 'yes') } catch {} }, [])
+  const openGuidedWelcome = useCallback(() => { setGuideStep(0); setSelectedTender(null); setGuideMode('welcome') }, [])
   const startGuidedTour = useCallback(() => { setGuideStep(0); setSelectedTender(null); setGuideMode('tour'); navigate('Overview') }, [navigate])
   const nextGuidedStep = useCallback(() => { if (guideMode === 'tour' && guideStep === 0) setGuideStep(1) }, [guideMode, guideStep])
   const handleTourRoadSelected = useCallback(() => { if (guideMode === 'tour' && guideStep === 2) setGuideStep(3) }, [guideMode, guideStep])
@@ -645,7 +664,7 @@ function App() {
   const awardedSum = stats?.total_awarded_value ?? awardedRows.reduce((sum, tender) => sum + Number(tender.award.awarded_value), 0)
   const tenderProps = { items: tenders, onDetails: openDetails, onShowOnMap: showTenderOnMap, loading, error, onRetry: () => setRefreshKey(key => key + 1) }
   const sortedTenders = useMemo(() => sortTenderRecords(tenders, filters.sort), [tenders, filters.sort])
-  return <div className="app-shell"><Header page={page} navigate={navigate} onStartTour={startGuidedTour} />
+  return <div className="app-shell"><Header page={page} navigate={navigate} onOpenGuide={openGuidedWelcome} />
     {page === 'Staff Sign In' && <StaffAccess />}
     {page === 'Overview' && <main><section className="hero-section"><div className="hero-image" role="img" aria-label="Road through Manipur" /><div className="hero-shade" /><div className="hero-content"><div className="hero-copy"><Eyebrow>MANIPUR · PUBLIC INFRASTRUCTURE</Eyebrow><h1>Public infrastructure.<br /><span>Public knowledge.</span></h1><p>RoadSathi brings road project and tender information into one clear, accessible place for every citizen.</p><div className="hero-actions"><button className="button button-light" onClick={() => navigate('Tenders')}>Explore tenders <Icon name="arrow" size={16} /></button><button className="button button-ghost-light" data-tour="map-entry" onClick={() => navigate('Map View')}><Icon name="pin" size={16} /> View on map</button></div></div><div className="hero-caption">INDO-MYANMAR ROAD · MANIPUR <a href="https://commons.wikimedia.org/wiki/File:Indo-Myanmar_Road,_Asian_Highway_No.1.jpg" target="_blank" rel="noreferrer">Photo: Premdatta Laitonjam / CC BY-SA 4.0</a></div></div></section>
       <div className="page-shell overview-content"><section className="stats-strip" data-tour="dashboard" aria-label="RoadSathi summary statistics"><Stat label="Published tenders" value={stats ? Number(stats.published_tenders || 0).toLocaleString('en-IN') : '—'} /><Stat label="Awards disclosed" value={stats ? Number(stats.awards_disclosed || 0).toLocaleString('en-IN') : '—'} /><Stat label="Total awarded contract value" value={stats ? formatCurrency(awardedSum) : '—'} note="As disclosed in public records" /><Stat label="Departments" value={stats ? Number(stats.departments || 0).toLocaleString('en-IN') : '—'} /></section>
