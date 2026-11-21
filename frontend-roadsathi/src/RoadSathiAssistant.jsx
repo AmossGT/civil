@@ -130,8 +130,6 @@ export default function RoadSathiAssistant({ page, navigate }) {
   const [typing, setTyping] = useState(false)
   const [showQuestions, setShowQuestions] = useState(true)
   const [idleCue, setIdleCue] = useState(false)
-  const [blinking, setBlinking] = useState(false)
-  const [blinkReady, setBlinkReady] = useState(false)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
   const triggerRef = useRef(null)
@@ -140,9 +138,6 @@ export default function RoadSathiAssistant({ page, navigate }) {
   const focusOutTimerRef = useRef(null)
   const bubbleVisibleRef = useRef(false)
   const responseTimerRef = useRef(null)
-  const blinkTimerRef = useRef(null)
-  const blinkDelayRef = useRef(null)
-  const blinkNowRef = useRef(null)
   const cooldownUntilRef = useRef(0)
   const processingRef = useRef(false)
   const messageIdRef = useRef(0)
@@ -151,53 +146,6 @@ export default function RoadSathiAssistant({ page, navigate }) {
   const messagesRef = useRef([])
 
   useEffect(() => { messagesRef.current = messages }, [messages])
-
-  useEffect(() => {
-    const openEyes = new Image()
-    const closedEyes = new Image()
-    openEyes.src = '/roadsathi-mascot-open.png'
-    closedEyes.onload = () => setBlinkReady(true)
-    closedEyes.src = '/roadsathi-mascot-blink.png'
-    return () => { closedEyes.onload = null }
-  }, [])
-
-  const blink = useCallback(() => {
-    if (!blinkReady || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    window.clearTimeout(blinkTimerRef.current)
-    setBlinking(true)
-    blinkTimerRef.current = window.setTimeout(() => setBlinking(false), 190)
-  }, [blinkReady])
-  useEffect(() => { blinkNowRef.current = blink }, [blink])
-
-  useEffect(() => {
-    let stopped = false
-    const clearBlinkDelay = () => window.clearTimeout(blinkDelayRef.current)
-    const scheduleBlink = () => {
-      clearBlinkDelay()
-      if (stopped || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-      blinkDelayRef.current = window.setTimeout(() => {
-        blinkNowRef.current?.()
-        if (!stopped) blinkDelayRef.current = window.setTimeout(scheduleBlink, 190)
-      }, 2000)
-    }
-    const handleVisibility = () => {
-      if (document.hidden) {
-        clearBlinkDelay()
-        window.clearTimeout(blinkTimerRef.current)
-        setBlinking(false)
-      } else if (!open) scheduleBlink()
-    }
-    if (open) {
-      clearBlinkDelay()
-    } else scheduleBlink()
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => {
-      stopped = true
-      clearBlinkDelay()
-      window.clearTimeout(blinkTimerRef.current)
-      document.removeEventListener('visibilitychange', handleVisibility)
-    }
-  }, [open])
 
   const hideBubble = useCallback(({ applyCooldown = false } = {}) => {
     window.clearTimeout(bubbleTimerRef.current)
@@ -217,7 +165,6 @@ export default function RoadSathiAssistant({ page, navigate }) {
         if (open || document.hidden || Date.now() < cooldownUntilRef.current) return
         cooldownUntilRef.current = Date.now() + 120_000
         setIdleCue(true)
-        blinkNowRef.current?.()
         bubbleVisibleRef.current = true
         setBubble(true)
         bubbleTimerRef.current = window.setTimeout(() => hideBubble(), 8_000)

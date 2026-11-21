@@ -53,8 +53,6 @@
 .guide-input-row button:disabled { cursor:default; opacity:.45; }
 .guide-disclaimer { flex:0 0 auto; padding:6px 12px 8px; color:#808991; text-align:center; font-size:9px; }
 .guide-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-@keyframes guide-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-@keyframes guide-idle-jump { 0%,100%{transform:translateY(0)} 28%{transform:translateY(-11px)} 53%{transform:translateY(1px)} 72%{transform:translateY(-5px)} }
 @keyframes guide-soft-glow { 0%,100%{filter:drop-shadow(0 0 0 rgba(54,198,244,0))} 50%{filter:drop-shadow(0 0 12px rgba(54,198,244,.58))} }
 @keyframes guide-enter { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
 @keyframes guide-dots { 0%,60%,100%{opacity:.45;transform:translateY(0)} 30%{opacity:1;transform:translateY(-3px)} }
